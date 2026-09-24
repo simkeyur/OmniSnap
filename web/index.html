@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OmniSnap — Visual Safety & Inspection Checks</title>
+  <meta name="description" content="A second pair of eyes for your shift, home, or fleet. Powered by open Jev-style decision models (Jev-Omni) with instant client-side policy evaluation.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <button class="theme-btn" id="theme-toggle" aria-label="Toggle light or dark theme">
+    <i class="ti ti-contrast" aria-hidden="true"></i>
+  </button>
+
+  <div class="top">
+    <h1>OmniSnap</h1>
+    <p>A second pair of eyes for your shift, home, or fleet</p>
+  </div>
+
+  <nav class="ss-nav" id="ss-nav" aria-label="Navigation Screens"></nav>
+
+  <main class="ss-phone">
+    <div class="ss-scr" id="ss-scr" aria-live="polite"></div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

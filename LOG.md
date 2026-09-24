@@ -20,3 +20,5 @@
 - [x] Created `.gitignore`, `models.lock.json`, and directory layout (`engine/`, `web/`, `shared/`, `eval/`, `tests/`).
 - [x] Created `shared/question-packs.json` containing 6 domain question packs and severity rules.
 - [x] Added CI workflow for JSON schema validation, engine mock tests, and client policy tests.
+- [x] Deployed engine to Hugging Face ZeroGPU Space: `https://huggingface.co/spaces/simkeyur/omnisnap-engine`.
+- [x] Deployed web UI to Hugging Face Static Space: `https://huggingface.co/spaces/simkeyur/omnisnap-site` (Direct: `https://simkeyur-omnisnap-site.hf.space`).
