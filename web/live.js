@@ -18,7 +18,7 @@ async function callGradioApi(apiName, dataArray) {
   });
 
   if (!postRes.ok) {
-    throw new Error(`Engine call ${apiName} returned status ${postRes.status}`);
+    throw new Error(`Engine call ${apiName} failed with HTTP ${postRes.status}`);
   }
 
   const { event_id } = await postRes.json();
@@ -26,7 +26,7 @@ async function callGradioApi(apiName, dataArray) {
 
   const getUrl = `${ENGINE_URL}/gradio_api/call/${apiName}/${event_id}`;
   const sseRes = await fetch(getUrl);
-  if (!sseRes.ok) throw new Error(`Engine stream returned status ${sseRes.status}`);
+  if (!sseRes.ok) throw new Error(`Engine stream failed with HTTP ${sseRes.status}`);
 
   const reader = sseRes.body.getReader();
   const decoder = new TextDecoder();
@@ -49,27 +49,19 @@ async function callGradioApi(apiName, dataArray) {
             return typeof resultData === 'string' ? JSON.parse(resultData) : resultData;
           }
         } catch {
-          // Keep buffering until complete JSON chunk
+          // Keep buffering until complete chunk
         }
       }
     }
   }
 
-  throw new Error("Stream closed without complete data");
+  throw new Error("Stream closed without returning results");
 }
 
-export async function callAnalyze({ imageBlob, domain, area, context = {}, localTime = "", customQuestion = "" }) {
+export async function callAnalyze({ imageBase64, domain, area, context = {}, localTime = "", customQuestion = "" }) {
   try {
-    // Convert blob to base64 Data URL or File payload for Gradio
-    const base64Data = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(imageBlob);
-    });
-
     const result = await callGradioApi("analyze", [
-      base64Data,
+      imageBase64,
       domain,
       area,
       JSON.stringify(context),
@@ -77,10 +69,14 @@ export async function callAnalyze({ imageBlob, domain, area, context = {}, local
       customQuestion
     ]);
 
+    if (result && result.error) {
+      throw new Error(result.error.message || result.error.code || "Model analysis failed");
+    }
+
     return result;
   } catch (err) {
-    console.warn("Live analyze call fallback to client mock:", err.message);
-    return mockAnalyze({ domain, area, customQuestion });
+    console.error("Live analyze failed:", err);
+    throw err;
   }
 }
 
@@ -98,36 +94,4 @@ export async function callNote(alertPayload) {
       gpu_ms: 0
     };
   }
-}
-
-function mockAnalyze({ domain, area, customQuestion }) {
-  const isSpillOrHazard = Math.random() > 0.4;
-  const pMain = isSpillOrHazard ? 0.75 + Math.random() * 0.2 : 0.05 + Math.random() * 0.15;
-
-  const mockAnswers = {
-    spill: { p: pMain, signal: pMain, severity: "high" },
-    trip: { p: 0.12, signal: 0.12, severity: "medium" },
-    person_down: { p: 0.02, signal: 0.02, severity: "critical" },
-    blocked: { p: 0.08, signal: 0.08, severity: "medium" },
-    tidy: { ev: 0.65, signal: 0.65, argmax: "Tidy", severity: null },
-    crowding: { ev: 0.35, signal: 0.35, argmax: "Light", severity: null }
-  };
-
-  if (customQuestion) {
-    mockAnswers.custom = {
-      p: 0.10,
-      signal: 0.10,
-      question: customQuestion,
-      custom: true
-    };
-  }
-
-  return {
-    schema: 1,
-    model: "akhilaaa3/Jev-Omni (client fallback)",
-    pack: `${domain}/${area}@v2`,
-    answers: mockAnswers,
-    latency_ms: { total: 1800, per_question_median: 220 },
-    gpu_ms: 1600
-  };
 }

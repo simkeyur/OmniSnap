@@ -11,7 +11,10 @@ except (ImportError, AttributeError):
 import json
 import time
 import os
+import base64
+import io
 import tempfile
+import traceback
 from pathlib import Path
 from PIL import Image
 import gradio as gr
@@ -25,35 +28,56 @@ from notes import generate_incident_note
 PACKS = load_question_packs()
 
 @gpu_decorator
-def analyze(image, domain: str, area: str, context_json: str = "{}", local_time: str = "", custom_question: str = ""):
+def analyze(image_data_or_path, domain: str, area: str, context_json: str = "{}", local_time: str = "", custom_question: str = ""):
     start_time = time.time()
+    print(f"[Engine] /analyze request received for domain={domain}, area={area}")
     
-    if image is None:
-        return {"error": {"code": "bad_image", "message": "No image provided"}}
+    if not image_data_or_path:
+        return json.dumps({"error": {"code": "bad_image", "message": "No image data provided"}})
 
     if domain not in PACKS["domains"]:
-        return {"error": {"code": "bad_domain", "message": f"Unknown domain: {domain}"}}
+        return json.dumps({"error": {"code": "bad_domain", "message": f"Unknown domain: {domain}"}})
 
     domain_data = PACKS["domains"][domain]
     if area not in domain_data["areas"]:
-        return {"error": {"code": "bad_area", "message": f"Unknown area: {area} for domain {domain}"}}
+        return json.dumps({"error": {"code": "bad_area", "message": f"Unknown area: {area} for domain {domain}"}})
 
     area_data = domain_data["areas"][area]
     questions = area_data["questions"]
 
+    # Decode image from base64 data URL, file path, or bytes
     try:
-        if isinstance(image, str):
-            image = Image.open(image).convert("RGB")
-        elif hasattr(image, "convert"):
-            image = image.convert("RGB")
+        if isinstance(image_data_or_path, str):
+            if image_data_or_path.startswith("data:image"):
+                header, encoded = image_data_or_path.split(",", 1)
+                image_bytes = base64.b64decode(encoded)
+                image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            elif os.path.exists(image_data_or_path):
+                image = Image.open(image_data_or_path).convert("RGB")
+            else:
+                # Try raw base64 decode
+                image_bytes = base64.b64decode(image_data_or_path)
+                image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        elif isinstance(image_data_or_path, dict) and "url" in image_data_or_path:
+            url_val = image_data_or_path["url"]
+            if url_val.startswith("data:image"):
+                header, encoded = url_val.split(",", 1)
+                image_bytes = base64.b64decode(encoded)
+                image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            else:
+                image = Image.open(url_val).convert("RGB")
+        else:
+            image = image_data_or_path.convert("RGB")
+
         image = validate_image(image)
     except Exception as e:
-        return {"error": {"code": "bad_image", "message": str(e)}}
+        traceback.print_exc()
+        return json.dumps({"error": {"code": "bad_image", "message": f"Image processing failed: {str(e)}"}})
 
     try:
         custom_question = validate_custom_question(custom_question)
     except Exception as e:
-        return {"error": {"code": "bad_question", "message": str(e)}}
+        return json.dumps({"error": {"code": "bad_question", "message": str(e)}})
 
     # Format state string from template
     context = {}
@@ -72,7 +96,11 @@ def analyze(image, domain: str, area: str, context_json: str = "{}", local_time:
         plant=context.get("plant", "plant")
     )
 
-    classifier = get_classifier()
+    try:
+        classifier = get_classifier()
+    except Exception as e:
+        traceback.print_exc()
+        return json.dumps({"error": {"code": "model_load_failed", "message": f"Failed to initialize Jev-Omni: {str(e)}"}})
 
     # Save image temporarily to pass to classifier
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
@@ -128,6 +156,9 @@ def analyze(image, domain: str, area: str, context_json: str = "{}", local_time:
             ans["question"] = custom_question
             answers["custom"] = ans
 
+    except Exception as e:
+        traceback.print_exc()
+        return json.dumps({"error": {"code": "inference_failed", "message": f"Jev-Omni inference error: {str(e)}"}})
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
@@ -174,7 +205,7 @@ with gr.Blocks(title="OmniSnap Engine") as demo:
     gr.Markdown("# OmniSnap Engine\nStateless ZeroGPU inference endpoint for Jev-Omni.")
 
     with gr.Tab("Analyze"):
-        inp_img = gr.Image(type="filepath", label="Input Image")
+        inp_img = gr.Textbox(label="Image (Base64 DataURL or File Path)", lines=3)
         inp_domain = gr.Textbox(value="store", label="Domain")
         inp_area = gr.Textbox(value="floor", label="Area")
         inp_ctx = gr.Textbox(value="{}", label="Context (JSON)")

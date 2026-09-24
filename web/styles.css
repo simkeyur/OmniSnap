@@ -121,14 +121,6 @@ input[type=text] {
   background: var(--surface-2);
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
-
 .top {
   max-width: 720px;
   margin: 0 auto 12px;
@@ -157,7 +149,7 @@ input[type=text] {
 }
 
 .ss-phone {
-  width: 400px;
+  width: 420px;
   max-width: 100%;
   margin: 0 auto;
   border: 0.5px solid var(--border-strong);
@@ -258,12 +250,113 @@ input[type=text] {
   border-radius: 50%;
 }
 
+/* --- Camera Viewfinder & Shutter --- */
+.viewfinder-box {
+  width: 100%;
+  height: 280px;
+  border-radius: 14px;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viewfinder-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.viewfinder-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.viewfinder-top-bar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.viewfinder-icon-btn {
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  backdrop-filter: blur(4px);
+}
+.viewfinder-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.shutter-container {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.shutter-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3.5px solid #ffffff;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+.shutter-btn:active {
+  transform: scale(0.92);
+}
+.shutter-inner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.flash-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+.flash-active {
+  animation: camera-flash 0.3s ease-out;
+}
+@keyframes camera-flash {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
 @media (max-width: 440px) {
   body { padding: 8px; }
   .ss-phone { border: none; padding: 0; background: transparent; box-shadow: none; }
   .ss-scr { border-radius: 12px; min-height: calc(100vh - 120px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
+  .viewfinder-box { height: 260px; }
 }

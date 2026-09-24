@@ -1,6 +1,6 @@
-import { decide, DEFAULT_PARAMS, computeTau, classifyBand } from './policy.js';
+import { decide, DEFAULT_PARAMS } from './policy.js';
 import { processImageFile, CameraStream } from './capture.js';
-import { callAnalyze, callNote } from './live.js';
+import { callAnalyze } from './live.js';
 
 let PACKS = null;
 
@@ -9,14 +9,16 @@ const STATE = {
   screen: 'welcome',
   domain: 'store',
   area: 'floor',
-  chip: 0,
   snapshots: [],
   resolvedAlerts: new Set(),
   policyParams: JSON.parse(JSON.stringify(DEFAULT_PARAMS)),
   sensitivity: 50,
   confirm: 2,
   lastResult: null,
-  activeStream: null
+  activeStream: null,
+  facingMode: 'environment',
+  capturedBase64: null,
+  errorMessage: null
 };
 
 const $ = id => document.getElementById(id);
@@ -41,38 +43,38 @@ function A() {
 const hdr = (title, back) => `
   <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
     <div style="display:flex;align-items:center;gap:6px;min-width:0">
-      ${back ? `<button aria-label="Back" id="hdr-back" data-go="${back}" style="height:28px;padding:0 8px"><i class="ti ti-arrow-left"></i></button>` : '<i class="ti ti-shield-check" style="font-size:20px;color:var(--text-accent)"></i>'}
+      ${back ? `<button aria-label="Back" data-go="${back}" style="height:30px;padding:0 8px"><i class="ti ti-arrow-left"></i></button>` : '<i class="ti ti-shield-check" style="font-size:22px;color:var(--text-accent)"></i>'}
       <span style="font-weight:600;font-size:15px">${title}</span>
     </div>
-    <button data-go="domains" style="height:26px;font-size:11px;padding:0 8px;border-radius:var(--radius);background:var(--surface-1);color:var(--text-secondary);border:none">
+    <button data-go="domains" style="height:28px;font-size:11px;padding:0 10px;border-radius:var(--radius);background:var(--surface-1);color:var(--text-secondary);border:none">
       <i class="ti ${D().icon || 'ti-building-store'}"></i> ${D().label || 'Store'}
     </button>
   </div>
 `;
 
 const foot = () => `
-  <p class="ss-muted" style="margin-top:auto;font-size:11px;text-align:center">
+  <p class="ss-muted" style="margin-top:auto;font-size:11px;text-align:center;padding-top:10px">
     ${D().disclaimer || 'Demo only, not a safety system'}
   </p>
 `;
 
 const SCREENS = {
   welcome: () => `
-    <div style="text-align:center;margin-top:24px">
-      <div style="width:60px;height:60px;border-radius:50%;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px">
+    <div style="text-align:center;margin-top:20px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px">
         <i class="ti ti-shield-check"></i>
       </div>
       <p style="font-size:20px;font-weight:600;margin:0 0 6px">OmniSnap</p>
       <p class="ss-muted" style="font-size:13px;line-height:1.4">
-        A second pair of eyes for your shift, home, or fleet. Snap a photo to get instant calibrated safety decisions.
+        A second pair of eyes for your shift, home, or fleet. Fast visual checks powered by open Jev-style decision models.
       </p>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:12px;margin:20px 0">
       ${[
-        ['ti-lock', 'Privacy by design', 'Photos are downscaled, EXIF-stripped in-browser, and never stored.'],
-        ['ti-gauge', 'Calibrated probabilities', 'Model returns confidence numbers rather than hallucinations.'],
-        ['ti-bolt', 'Instant policy sliders', 'Change threshold rules with zero new model queries.']
+        ['ti-lock', 'Privacy by design', 'Photos downscaled to 768px, EXIF stripped, and never stored.'],
+        ['ti-gauge', 'Calibrated probabilities', 'Direct likelihood numbers for each safety question.'],
+        ['ti-bolt', 'Instant policy sliders', 'Adjust thresholds with zero extra model queries.']
       ].map(([icon, title, desc]) => `
         <div style="display:flex;gap:10px;align-items:flex-start">
           <i class="ti ${icon}" style="font-size:20px;color:var(--text-accent);margin-top:2px"></i>
@@ -85,13 +87,13 @@ const SCREENS = {
     </div>
 
     <button class="ss-btn ss-pri" data-go="domains"><i class="ti ti-arrow-right"></i> Choose Domain</button>
-    <button class="ss-btn" data-go="shift"><i class="ti ti-history"></i> View Session (${STATE.snapshots.length} snapshots)</button>
+    <button class="ss-btn" data-go="shift"><i class="ti ti-history"></i> View Session (${STATE.snapshots.length} checks)</button>
     ${foot()}
   `,
 
   domains: () => `
-    ${hdr("What are you checking?", "welcome")}
-    <p class="ss-muted" style="margin:0">Select an inspection domain. You can switch any time.</p>
+    ${hdr("Select Inspection Domain", "welcome")}
+    <p class="ss-muted" style="margin:0">Choose what you are checking. You can change this anytime.</p>
     <div class="ss-dgrid">
       ${Object.entries(PACKS?.domains || {}).map(([id, d]) => `
         <button class="ss-dcard${id === STATE.domain ? " on" : ""}" data-domain="${id}" aria-pressed="${id === STATE.domain}">
@@ -101,68 +103,123 @@ const SCREENS = {
         </button>
       `).join('')}
     </div>
-    <button class="ss-btn ss-pri" data-go="camera"><i class="ti ti-camera"></i> Continue to ${D().label}</button>
+    <button class="ss-btn ss-pri" data-go="camera"><i class="ti ti-camera"></i> Continue with ${D().label}</button>
     ${foot()}
   `,
 
   camera: () => {
     const d = D();
     const areas = Object.entries(d.areas || {});
+    const hasPhoto = !!STATE.capturedBase64;
+
     return `
-      ${hdr("New Inspection Check", "domains")}
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${areas.map(([id, a]) => `
-          <button data-area="${id}" class="ss-pill" style="padding:6px 12px;font-size:12px;${id === STATE.area ? "background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)" : ""}">
-            ${a.label}
+      ${hdr("Check: " + d.label, "domains")}
+      
+      <!-- Area selector chips -->
+      <div>
+        <div class="ss-muted" style="font-size:11px;margin-bottom:4px">Select Area:</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${areas.map(([id, a]) => `
+            <button data-area="${id}" class="ss-pill" style="padding:6px 12px;font-size:12px;${id === STATE.area ? "background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)" : ""}">
+              ${a.label}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Viewfinder / Photo Area -->
+      <div class="viewfinder-box" id="viewfinder">
+        <video id="camera-video" class="viewfinder-video" style="display:none" autoplay playsinline muted></video>
+        <img id="camera-img" class="viewfinder-img" style="${hasPhoto ? '' : 'display:none'}" src="${STATE.capturedBase64 || ''}">
+        <div class="flash-overlay" id="flash-overlay"></div>
+
+        <!-- Top controls when video is running -->
+        <div class="viewfinder-top-bar" id="viewfinder-top" style="display:none">
+          <button class="viewfinder-icon-btn" id="btn-close-stream" aria-label="Close Camera"><i class="ti ti-x"></i></button>
+          <button class="viewfinder-icon-btn" id="btn-flip-stream" aria-label="Flip Camera"><i class="ti ti-camera-rotate"></i></button>
+        </div>
+
+        <!-- Floating Shutter button over video -->
+        <div class="shutter-container" id="shutter-box" style="display:none">
+          <button class="shutter-btn" id="btn-shutter" aria-label="Snap Photo">
+            <div class="shutter-inner"></div>
           </button>
-        `).join('')}
-      </div>
-
-      <div style="border:1.5px dashed var(--border-strong);border-radius:12px;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;background:var(--surface-1);position:relative;overflow:hidden">
-        <video id="camera-preview" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:12px" autoplay playsinline muted></video>
-        <img id="image-preview" style="display:none;width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;border-radius:12px">
-        <i class="ti ti-photo" style="font-size:44px;color:var(--text-muted)"></i>
-        <div style="text-align:center">
-          <div style="font-weight:500">Take a photo or upload</div>
-          <div class="ss-muted" style="font-size:11px">Auto-scaled to 768px · EXIF stripped</div>
         </div>
-        <div style="display:flex;gap:8px">
-          <input type="file" id="file-input" accept="image/*" style="display:none">
-          <button id="btn-browse" class="ss-btn" style="height:36px;font-size:12px"><i class="ti ti-upload"></i> Browse</button>
-          <button id="btn-camera" class="ss-btn ss-pri" style="height:36px;font-size:12px"><i class="ti ti-camera"></i> Use Camera</button>
+
+        <!-- Placeholder when no photo and camera inactive -->
+        <div id="viewfinder-placeholder" style="${hasPhoto ? 'display:none;' : ''}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;text-align:center;padding:20px">
+          <i class="ti ti-camera" style="font-size:42px;opacity:0.8"></i>
+          <span style="font-weight:500;font-size:14px">Ready to check ${A().label || 'area'}</span>
+          <span style="font-size:11px;opacity:0.7">Snap a photo or open live camera</span>
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <label for="custom-q" style="font-weight:500;font-size:12px">Ask custom yes/no question (optional):</label>
-        <input type="text" id="custom-q" placeholder="${d.custom_placeholder || 'e.g. Is the door open?'}" maxlength="120">
+      <!-- Action buttons -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${hasPhoto ? `
+          <div style="display:flex;gap:8px">
+            <button id="btn-retake" class="ss-btn" style="flex:1"><i class="ti ti-rotate"></i> Retake</button>
+            <button id="btn-run-check" class="ss-btn ss-pri" style="flex:2"><i class="ti ti-sparkles"></i> Run Check</button>
+          </div>
+        ` : `
+          <div style="display:flex;gap:8px">
+            <!-- Native phone camera input: launches camera app on iOS/Android -->
+            <input type="file" id="native-cam-input" accept="image/*" capture="environment" style="display:none">
+            <button id="btn-native-cam" class="ss-btn ss-pri" style="flex:1"><i class="ti ti-camera"></i> Camera</button>
+            
+            <!-- Live in-browser stream -->
+            <button id="btn-start-stream" class="ss-btn" style="flex:1"><i class="ti ti-video"></i> Live Stream</button>
+
+            <!-- File browse -->
+            <input type="file" id="file-browse-input" accept="image/*" style="display:none">
+            <button id="btn-browse-file" class="ss-btn" style="width:48px;padding:0" aria-label="Upload from files"><i class="ti ti-photo"></i></button>
+          </div>
+        `}
       </div>
 
-      <button class="ss-btn ss-pri" id="btn-run-check" style="margin-top:auto"><i class="ti ti-sparkles"></i> Run Check</button>
+      <!-- Custom question toggle -->
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label for="custom-q" class="ss-muted" style="font-size:11px">Optional custom question (Yes/No):</label>
+        <input type="text" id="custom-q" placeholder="${d.custom_placeholder || 'e.g. Is the freezer closed?'}" maxlength="120">
+      </div>
+
       ${foot()}
     `;
   },
 
   checking: () => `
-    ${hdr("Analyzing...", "camera")}
-    <div style="text-align:center;margin:40px 0">
-      <div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--text-accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px"></div>
-      <div style="font-weight:600;font-size:16px" id="chk-status">Evaluating checklist...</div>
+    ${hdr("Analyzing Photo", "camera")}
+    <div style="text-align:center;margin:50px 0">
+      <div style="width:52px;height:52px;border:3.5px solid var(--border);border-top-color:var(--text-accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px"></div>
+      <div style="font-weight:600;font-size:16px">Calling Jev-Omni Model...</div>
       <p class="ss-muted" style="font-size:12px;margin:8px 0 0">
-        Jev-Omni running ~8 typed probability checks
+        Evaluating ~8 typed safety questions on Hugging Face ZeroGPU
       </p>
     </div>
     <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
     ${foot()}
   `,
 
+  error: () => `
+    ${hdr("Check Failed", "camera")}
+    <div style="background:var(--bg-danger);color:var(--text-danger);border-radius:var(--radius);padding:14px;margin:20px 0;display:flex;flex-direction:column;gap:6px">
+      <div style="font-weight:600;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-alert-triangle"></i> Inference Error
+      </div>
+      <div style="font-size:12px;line-height:1.4">${STATE.errorMessage || 'Unable to complete model evaluation.'}</div>
+    </div>
+    <button class="ss-btn ss-pri" data-go="camera"><i class="ti ti-rotate"></i> Try Again</button>
+    ${foot()}
+  `,
+
   results: () => {
     const res = STATE.lastResult;
-    if (!res) return `<div class="ss-muted">No recent result.</div><button class="ss-btn" data-go="camera">Back</button>`;
+    if (!res) return `<div class="ss-muted">No result found.</div><button class="ss-btn" data-go="camera">Back</button>`;
     
     const answers = res.answers || {};
     return `
       ${hdr("Check Results", "camera")}
+      
       <div style="background:var(--surface-1);border-radius:var(--radius);padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-weight:600">${D().label} · ${A().label}</div>
@@ -178,8 +235,8 @@ const SCREENS = {
           const valStr = isScore ? `${ans.argmax} (${pct}%)` : `${pct}%`;
           
           let fill = "var(--fill-success)";
-          if (pct >= 70) fill = "var(--fill-danger)";
-          else if (pct >= 40) fill = "var(--fill-warning)";
+          if (pct >= 65) fill = "var(--fill-danger)";
+          else if (pct >= 35) fill = "var(--fill-warning)";
 
           return `
             <div class="ss-row">
@@ -196,7 +253,7 @@ const SCREENS = {
       </div>
 
       <button class="ss-btn ss-pri" data-go="camera"><i class="ti ti-camera"></i> Check Another Photo</button>
-      <button class="ss-btn" data-go="shift"><i class="ti ti-history"></i> View Session & Alerts</button>
+      <button class="ss-btn" data-go="shift"><i class="ti ti-history"></i> View Session Timeline</button>
       ${foot()}
     `;
   },
@@ -217,7 +274,7 @@ const SCREENS = {
           <div style="font-size:18px;font-weight:600">${STATE.snapshots.length * 8}</div>
         </div>
         <div style="background:var(--surface-1);border-radius:var(--radius);padding:8px">
-          <div class="ss-muted" style="font-size:11px">Active Alerts</div>
+          <div class="ss-muted" style="font-size:11px">Alerts</div>
           <div style="font-size:18px;font-weight:600;color:${openAlerts.length ? 'var(--text-danger)' : 'var(--text-success)'}">
             ${openAlerts.length}
           </div>
@@ -231,7 +288,7 @@ const SCREENS = {
             <span style="font-size:11px">${Math.round(a.peak_s * 100)}%</span>
           </div>
           <p style="margin:6px 0;font-size:12px;font-family:var(--font-voice);color:var(--text-primary)">
-            Incident logged for ${a.place}. Review and confirm resolution.
+            Incident flagged at ${a.place}. Review and confirm resolution.
           </p>
           <div style="display:flex;gap:6px">
             <button class="ss-btn ss-pri" style="height:28px;font-size:11px" data-resolve="${a.id}"><i class="ti ti-check"></i> Mark Resolved</button>
@@ -240,7 +297,7 @@ const SCREENS = {
       `).join('') : `
         <div style="background:var(--bg-success);color:var(--text-success);border-radius:var(--radius);padding:10px;display:flex;align-items:center;gap:8px">
           <i class="ti ti-circle-check" style="font-size:18px"></i>
-          <span>No open alerts. All systems clear.</span>
+          <span>No open alerts. All checks clear.</span>
         </div>
       `}
 
@@ -284,8 +341,6 @@ const SCREENS = {
   `
 };
 
-let capturedBlob = null;
-
 function renderNav() {
   const screens = [
     ['welcome', 'Home'],
@@ -300,81 +355,153 @@ function renderNav() {
 }
 
 function navigate(screenName) {
+  if (STATE.activeStream) {
+    STATE.activeStream.stop();
+    STATE.activeStream = null;
+  }
   STATE.screen = screenName;
   renderNav();
   $('ss-scr').innerHTML = SCREENS[screenName] ? SCREENS[screenName]() : SCREENS.welcome();
   attachScreenEvents();
 }
 
+function triggerFlash() {
+  const flash = $('flash-overlay');
+  if (flash) {
+    flash.classList.remove('flash-active');
+    void flash.offsetWidth; // trigger reflow
+    flash.classList.add('flash-active');
+  }
+}
+
 function attachScreenEvents() {
   const scr = STATE.screen;
 
   if (scr === 'camera') {
-    const fileInput = $('file-input');
-    const btnBrowse = $('btn-browse');
-    const btnCamera = $('btn-camera');
-    const btnRun = $('btn-run-check');
-    const imgPrev = $('image-preview');
-    const vidPrev = $('camera-preview');
+    const nativeInput = $('native-cam-input');
+    const browseInput = $('file-browse-input');
+    const btnNative = $('btn-native-cam');
+    const btnBrowse = $('btn-browse-file');
+    const btnStartStream = $('btn-start-stream');
+    const btnShutter = $('btn-shutter');
+    const btnCloseStream = $('btn-close-stream');
+    const btnFlipStream = $('btn-flip-stream');
+    const btnRetake = $('btn-retake');
+    const btnRunCheck = $('btn-run-check');
 
-    btnBrowse.onclick = () => fileInput.click();
-    fileInput.onchange = async (e) => {
-      const file = e.target.files[0];
+    const videoEl = $('camera-video');
+    const imgEl = $('camera-img');
+    const topBar = $('viewfinder-top');
+    const shutterBox = $('shutter-box');
+    const placeholder = $('viewfinder-placeholder');
+
+    const handleFile = async (file) => {
       if (!file) return;
       const res = await processImageFile(file);
-      capturedBlob = res.blob;
-      imgPrev.src = res.dataUrl;
-      imgPrev.style.display = 'block';
-      vidPrev.style.display = 'none';
-      if (STATE.activeStream) STATE.activeStream.stop();
+      STATE.capturedBase64 = res.dataUrl;
+      navigate('camera');
     };
 
-    btnCamera.onclick = async () => {
-      STATE.activeStream = new CameraStream(vidPrev);
-      vidPrev.style.display = 'block';
-      imgPrev.style.display = 'none';
-      await STATE.activeStream.start();
-    };
+    if (btnNative) {
+      btnNative.onclick = () => nativeInput.click();
+      nativeInput.onchange = (e) => handleFile(e.target.files[0]);
+    }
 
-    btnRun.onclick = async () => {
-      if (STATE.activeStream && vidPrev.style.display === 'block') {
+    if (btnBrowse) {
+      btnBrowse.onclick = () => browseInput.click();
+      browseInput.onchange = (e) => handleFile(e.target.files[0]);
+    }
+
+    if (btnStartStream) {
+      btnStartStream.onclick = async () => {
+        STATE.activeStream = new CameraStream(videoEl);
+        const ok = await STATE.activeStream.start(STATE.facingMode);
+        if (ok) {
+          videoEl.style.display = 'block';
+          imgEl.style.display = 'none';
+          if (placeholder) placeholder.style.display = 'none';
+          topBar.style.display = 'flex';
+          shutterBox.style.display = 'flex';
+        } else {
+          alert("Could not access camera. Please check camera permissions or use 'Upload Photo'.");
+        }
+      };
+    }
+
+    if (btnShutter) {
+      btnShutter.onclick = async () => {
+        if (!STATE.activeStream) return;
+        triggerFlash();
         const frame = await STATE.activeStream.captureFrame();
-        capturedBlob = frame?.blob;
-        STATE.activeStream.stop();
-      }
+        if (frame && frame.dataUrl) {
+          STATE.capturedBase64 = frame.dataUrl;
+          STATE.activeStream.stop();
+          STATE.activeStream = null;
+          setTimeout(() => navigate('camera'), 200);
+        }
+      };
+    }
 
-      if (!capturedBlob) {
-        // Fallback transparent 1x1 blob if nothing selected
-        const canvas = document.createElement('canvas');
-        canvas.width = 100; canvas.height = 100;
-        await new Promise(r => canvas.toBlob(b => { capturedBlob = b; r(); }, 'image/jpeg'));
-      }
+    if (btnCloseStream) {
+      btnCloseStream.onclick = () => {
+        if (STATE.activeStream) STATE.activeStream.stop();
+        STATE.activeStream = null;
+        navigate('camera');
+      };
+    }
 
-      navigate('checking');
-      const customQ = $('custom-q')?.value || '';
-      
-      const res = await callAnalyze({
-        imageBlob: capturedBlob,
-        domain: STATE.domain,
-        area: STATE.area,
-        localTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        customQuestion: customQ
-      });
+    if (btnFlipStream) {
+      btnFlipStream.onclick = async () => {
+        STATE.facingMode = STATE.facingMode === 'environment' ? 'user' : 'environment';
+        if (STATE.activeStream) {
+          await STATE.activeStream.start(STATE.facingMode);
+        }
+      };
+    }
 
-      STATE.lastResult = res;
+    if (btnRetake) {
+      btnRetake.onclick = () => {
+        STATE.capturedBase64 = null;
+        navigate('camera');
+      };
+    }
 
-      // Add to session snapshots
-      STATE.snapshots.push({
-        id: `snap-${Date.now()}`,
-        domain: STATE.domain,
-        area: STATE.area,
-        place: A().label,
-        timestamp: new Date().toISOString(),
-        answers: res.answers
-      });
+    if (btnRunCheck) {
+      btnRunCheck.onclick = async () => {
+        if (!STATE.capturedBase64) return;
+        const customQ = $('custom-q')?.value || '';
+        const b64Data = STATE.capturedBase64;
 
-      navigate('results');
-    };
+        navigate('checking');
+
+        try {
+          const res = await callAnalyze({
+            imageBase64: b64Data,
+            domain: STATE.domain,
+            area: STATE.area,
+            localTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            customQuestion: customQ
+          });
+
+          STATE.lastResult = res;
+
+          // Record in session
+          STATE.snapshots.push({
+            id: `snap-${Date.now()}`,
+            domain: STATE.domain,
+            area: STATE.area,
+            place: A().label,
+            timestamp: new Date().toISOString(),
+            answers: res.answers
+          });
+
+          navigate('results');
+        } catch (err) {
+          STATE.errorMessage = err.message || "Failed to analyze image.";
+          navigate('error');
+        }
+      };
+    }
   }
 
   if (scr === 'rules') {
@@ -383,7 +510,6 @@ function attachScreenEvents() {
       range.oninput = (e) => {
         STATE.sensitivity = +e.target.value;
         $('sens-val').textContent = `${STATE.sensitivity}%`;
-        // Adjust c_miss based on sensitivity
         const mult = STATE.sensitivity / 50;
         STATE.policyParams.severities.high.c_miss = 10 * mult;
         STATE.policyParams.severities.critical.c_miss = 50 * mult;

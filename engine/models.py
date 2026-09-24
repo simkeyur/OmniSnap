@@ -13,6 +13,7 @@ def get_classifier():
 
     import torch
     if torch.cuda.is_available():
+        print(f"[Engine] CUDA detected (device_count={torch.cuda.device_count()}). Loading {MODEL_ID}...")
         from huggingface_hub import snapshot_download
         import importlib.util
 
@@ -21,8 +22,9 @@ def get_classifier():
         loader_mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(loader_mod)
         _classifier = loader_mod.load_jev_omni(device="cuda")
+        print("[Engine] Jev-Omni loaded successfully onto CUDA.")
     else:
-        # Mock classifier for testing / CPU environments
+        print("[Engine] Running without CUDA. Using MockJevOmni.")
         class MockJevOmni:
             def predict(self, *, state, question, options, media=None, modality="image", video_frames=16):
                 p = 0.85 if "spill" in question.lower() or "wet" in question.lower() else 0.15
