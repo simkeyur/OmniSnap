@@ -10,10 +10,16 @@ const ENGINE_URL = "https://simkeyur-omnisnap-engine.hf.space";
  * Generic caller for Gradio 6 /gradio_api/call/<api_name> endpoints
  */
 async function callGradioApi(apiName, dataArray) {
+  const token = localStorage.getItem("omnisnap_hf_token") || localStorage.getItem("hf_token");
+  const headers = { "Content-Type": "application/json" };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token.trim()}`;
+  }
+
   const postUrl = `${ENGINE_URL}/gradio_api/call/${apiName}`;
   const postRes = await fetch(postUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ data: dataArray })
   });
 
@@ -25,7 +31,8 @@ async function callGradioApi(apiName, dataArray) {
   if (!event_id) throw new Error("No event_id returned from engine");
 
   const getUrl = `${ENGINE_URL}/gradio_api/call/${apiName}/${event_id}`;
-  const sseRes = await fetch(getUrl);
+  const sseHeaders = token ? { "Authorization": `Bearer ${token.trim()}` } : {};
+  const sseRes = await fetch(getUrl, { headers: sseHeaders });
   if (!sseRes.ok) throw new Error(`Engine stream failed with HTTP ${sseRes.status}`);
 
   const reader = sseRes.body.getReader();
@@ -44,11 +51,17 @@ async function callGradioApi(apiName, dataArray) {
         const rawJson = lines[i].slice(6).trim();
         try {
           const parsed = JSON.parse(rawJson);
+          if (parsed && parsed.error) {
+            throw new Error(typeof parsed.error === 'string' ? parsed.error : (parsed.error.message || JSON.stringify(parsed.error)));
+          }
           if (Array.isArray(parsed) && parsed.length > 0) {
             const resultData = parsed[0];
             return typeof resultData === 'string' ? JSON.parse(resultData) : resultData;
           }
-        } catch {
+        } catch (e) {
+          if (e.message && (e.message.includes("quota") || e.message.includes("ZeroGPU") || e.message.includes("exceeded"))) {
+            throw e;
+          }
           // Keep buffering until complete chunk
         }
       }
