@@ -1,26 +1,66 @@
 /**
  * OmniSnap Live Engine API Client
  * Connects to Hugging Face ZeroGPU Gradio Space (simkeyur/omnisnap-engine)
- * Provides fallback mock responses when offline or testing without quota.
+ * Compatible with Gradio 6.x streaming call protocol.
  */
 
-const ENGINE_SPACE = "simkeyur/omnisnap-engine";
-const DIRECT_API_URL = "https://simkeyur-omnisnap-engine.hf.space";
+const ENGINE_URL = "https://simkeyur-omnisnap-engine.hf.space";
+
+/**
+ * Generic caller for Gradio 6 /gradio_api/call/<api_name> endpoints
+ */
+async function callGradioApi(apiName, dataArray) {
+  const postUrl = `${ENGINE_URL}/gradio_api/call/${apiName}`;
+  const postRes = await fetch(postUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: dataArray })
+  });
+
+  if (!postRes.ok) {
+    throw new Error(`Engine call ${apiName} returned status ${postRes.status}`);
+  }
+
+  const { event_id } = await postRes.json();
+  if (!event_id) throw new Error("No event_id returned from engine");
+
+  const getUrl = `${ENGINE_URL}/gradio_api/call/${apiName}/${event_id}`;
+  const sseRes = await fetch(getUrl);
+  if (!sseRes.ok) throw new Error(`Engine stream returned status ${sseRes.status}`);
+
+  const reader = sseRes.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // Look for event: complete followed by data: [...]
+    const lines = buffer.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('data: ')) {
+        const rawJson = lines[i].slice(6).trim();
+        try {
+          const parsed = JSON.parse(rawJson);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const resultData = parsed[0];
+            return typeof resultData === 'string' ? JSON.parse(resultData) : resultData;
+          }
+        } catch {
+          // Keep buffering until complete JSON chunk
+        }
+      }
+    }
+  }
+
+  throw new Error("Stream closed without complete data");
+}
 
 export async function callAnalyze({ imageBlob, domain, area, context = {}, localTime = "", customQuestion = "" }) {
-  // Use direct fetch / Gradio Client HTTP endpoint
   try {
-    const formData = new FormData();
-    formData.append("data", JSON.stringify([
-      null, // Image handled below
-      domain,
-      area,
-      JSON.stringify(context),
-      localTime,
-      customQuestion
-    ]));
-
-    // Read blob as base64 data url for Gradio Image input
+    // Convert blob to base64 Data URL or File payload for Gradio
     const base64Data = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -28,62 +68,39 @@ export async function callAnalyze({ imageBlob, domain, area, context = {}, local
       reader.readAsDataURL(imageBlob);
     });
 
-    const response = await fetch(`${DIRECT_API_URL}/api/predict/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        data: [
-          base64Data,
-          domain,
-          area,
-          JSON.stringify(context),
-          localTime,
-          customQuestion
-        ]
-      })
-    });
+    const result = await callGradioApi("analyze", [
+      base64Data,
+      domain,
+      area,
+      JSON.stringify(context),
+      localTime,
+      customQuestion
+    ]);
 
-    if (!response.ok) {
-      throw new Error(`Engine returned HTTP ${response.status}`);
-    }
-
-    const json = await response.json();
-    return json.data[0];
+    return result;
   } catch (err) {
-    console.warn("Live engine call failed or space still building, using client-side mock:", err.message);
+    console.warn("Live analyze call fallback to client mock:", err.message);
     return mockAnalyze({ domain, area, customQuestion });
   }
 }
 
 export async function callNote(alertPayload) {
   try {
-    const response = await fetch(`${DIRECT_API_URL}/api/predict/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fn_index: 1, // /note endpoint
-        data: [JSON.stringify(alertPayload)]
-      })
-    });
-
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const json = await response.json();
-    return json.data[0];
+    const result = await callGradioApi("note", [JSON.stringify(alertPayload)]);
+    return result;
   } catch (err) {
-    // Template fallback
     const place = alertPayload.place || alertPayload.area;
     const time = alertPayload.local_time || "recent";
     const q = alertPayload.q || "hazard";
     const p = Math.round((alertPayload.p || 0.8) * 100);
     return {
-      note: `${place}, ${time}: observed ${q.replace('_', ' ')} (${p}% probability). Please inspect and address as appropriate.`,
+      note: `${place}, ${time}: observed ${q.replace(/_/g, ' ')} (${p}% probability). Please inspect and address as appropriate.`,
       gpu_ms: 0
     };
   }
 }
 
 function mockAnalyze({ domain, area, customQuestion }) {
-  // Generates calibrated realistic probabilities for testing
   const isSpillOrHazard = Math.random() > 0.4;
   const pMain = isSpillOrHazard ? 0.75 + Math.random() * 0.2 : 0.05 + Math.random() * 0.15;
 
@@ -107,7 +124,7 @@ function mockAnalyze({ domain, area, customQuestion }) {
 
   return {
     schema: 1,
-    model: "akhilaaa3/Jev-Omni (mock / fallback)",
+    model: "akhilaaa3/Jev-Omni (client fallback)",
     pack: `${domain}/${area}@v2`,
     answers: mockAnswers,
     latency_ms: { total: 1800, per_question_median: 220 },

@@ -1,10 +1,8 @@
 import os
-import torch
 from pathlib import Path
 from PIL import Image
 
 MODEL_ID = "akhilaaa3/Jev-Omni"
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
 _classifier = None
 
@@ -13,6 +11,7 @@ def get_classifier():
     if _classifier is not None:
         return _classifier
 
+    import torch
     if torch.cuda.is_available():
         from huggingface_hub import snapshot_download
         import importlib.util
@@ -26,8 +25,6 @@ def get_classifier():
         # Mock classifier for testing / CPU environments
         class MockJevOmni:
             def predict(self, *, state, question, options, media=None, modality="image", video_frames=16):
-                import random
-                # Deterministic pseudo-probabilities for testing
                 p = 0.85 if "spill" in question.lower() or "wet" in question.lower() else 0.15
                 if len(options) == 2 and options[0] == "Yes" and options[1] == "No":
                     return {

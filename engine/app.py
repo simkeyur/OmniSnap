@@ -1,3 +1,13 @@
+try:
+    import spaces
+    gpu_decorator = spaces.GPU(duration=30)
+    note_decorator = spaces.GPU(duration=15)
+except (ImportError, AttributeError):
+    def gpu_decorator(fn):
+        return fn
+    def note_decorator(fn):
+        return fn
+
 import json
 import time
 import os
@@ -11,16 +21,6 @@ from jev import format_noul_answer, format_score_answer
 from packs import load_question_packs
 from models import get_classifier
 from notes import generate_incident_note
-
-try:
-    import spaces
-    gpu_decorator = spaces.GPU(duration=30)
-    note_decorator = spaces.GPU(duration=15)
-except (ImportError, AttributeError):
-    def gpu_decorator(fn):
-        return fn
-    def note_decorator(fn):
-        return fn
 
 PACKS = load_question_packs()
 
@@ -135,7 +135,7 @@ def analyze(image, domain: str, area: str, context_json: str = "{}", local_time:
     total_latency_ms = int((time.time() - start_time) * 1000)
     per_q_median = int(sorted(q_start_times)[len(q_start_times) // 2] * 1000) if q_start_times else 0
 
-    return {
+    return json.dumps({
         "schema": 1,
         "model": "akhilaaa3/Jev-Omni@c050d51354147985d13286cf4acf90f562f2c631",
         "pack": f"{domain}/{area}@v2",
@@ -145,7 +145,7 @@ def analyze(image, domain: str, area: str, context_json: str = "{}", local_time:
             "per_question_median": per_q_median
         },
         "gpu_ms": total_latency_ms
-    }
+    }, indent=2)
 
 @note_decorator
 def note(payload_json: str):
@@ -157,43 +157,43 @@ def note(payload_json: str):
 
     note_text = generate_incident_note(payload)
     elapsed_ms = int((time.time() - t0) * 1000)
-    return {
+    return json.dumps({
         "note": note_text,
         "gpu_ms": elapsed_ms
-    }
+    }, indent=2)
 
 def health():
-    return {
+    return json.dumps({
         "ok": True,
         "model": "akhilaaa3/Jev-Omni",
         "sha": "c050d51354147985d13286cf4acf90f562f2c631",
         "packs_version": PACKS.get("version", "2.0.0")
-    }
+    }, indent=2)
 
 with gr.Blocks(title="OmniSnap Engine") as demo:
     gr.Markdown("# OmniSnap Engine\nStateless ZeroGPU inference endpoint for Jev-Omni.")
 
     with gr.Tab("Analyze"):
-        inp_img = gr.Image(type="pil", label="Input Image")
+        inp_img = gr.Image(type="filepath", label="Input Image")
         inp_domain = gr.Textbox(value="store", label="Domain")
         inp_area = gr.Textbox(value="floor", label="Area")
         inp_ctx = gr.Textbox(value="{}", label="Context (JSON)")
         inp_time = gr.Textbox(value="", label="Local Time")
         inp_custom = gr.Textbox(value="", label="Custom Question")
-        out_json = gr.JSON(label="Analysis Result")
+        out_json = gr.Textbox(label="Analysis Result (JSON)", lines=15)
         btn_run = gr.Button("Analyze")
         btn_run.click(analyze, inputs=[inp_img, inp_domain, inp_area, inp_ctx, inp_time, inp_custom], outputs=out_json, api_name="analyze")
 
     with gr.Tab("Note"):
         inp_note_payload = gr.Textbox(value="{}", label="Alert Context JSON")
-        out_note_json = gr.JSON(label="Generated Note")
+        out_note_json = gr.Textbox(label="Generated Note (JSON)", lines=5)
         btn_note = gr.Button("Generate Note")
         btn_note.click(note, inputs=[inp_note_payload], outputs=out_note_json, api_name="note")
 
     with gr.Tab("Health"):
-        out_health = gr.JSON(label="Status")
+        out_health = gr.Textbox(label="Status (JSON)", lines=5)
         btn_health = gr.Button("Check Health")
         btn_health.click(health, outputs=out_health, api_name="health")
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(server_name="0.0.0.0", server_port=7860)
