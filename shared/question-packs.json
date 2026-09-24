@@ -1,0 +1,395 @@
+{
+  "version": "2.0.0",
+  "name": "OmniSnap Question Packs",
+  "severity_defaults": {
+    "critical": { "c_miss": 50, "c_false": 1, "default_tau": 0.30 },
+    "high": { "c_miss": 10, "c_false": 1, "default_tau": 0.40 },
+    "medium": { "c_miss": 4, "c_false": 1, "default_tau": 0.50 },
+    "low": { "c_miss": 1, "c_false": 1, "default_tau": 0.65 }
+  },
+  "domains": {
+    "store": {
+      "id": "store",
+      "label": "Store",
+      "icon": "ti-building-store",
+      "blurb": "Spills, trip hazards, blocked exits",
+      "target_audience": "Retail staff",
+      "tier": 1,
+      "state_template": "Photo taken by store staff with a phone. Area: {area}. Time: {local_time}.",
+      "banners": {
+        "act": "Needs attention",
+        "check": "Take another look",
+        "clear": "All clear"
+      },
+      "custom_placeholder": "Is the freezer door left open?",
+      "disclaimer": "Demo only, not a safety system · Jev-Omni open model",
+      "areas": {
+        "floor": {
+          "label": "Aisle / Floor",
+          "questions": [
+            { "id": "spill", "type": "noul", "question": "Is there liquid, a puddle, or a wet patch on the floor?", "severity": "high" },
+            { "id": "trip", "type": "noul", "question": "Is there an object on the floor that someone could trip over?", "severity": "medium" },
+            { "id": "person_down", "type": "noul", "question": "Is a person lying or fallen on the floor?", "severity": "critical" },
+            { "id": "blocked", "type": "noul", "question": "Is the walkway or aisle blocked?", "severity": "medium" },
+            { "id": "empty_shelf", "type": "noul", "question": "Is there a visibly empty section on a shelf?", "severity": "low" },
+            { "id": "broken", "type": "noul", "question": "Is there broken glass or a broken product visible?", "severity": "high" },
+            { "id": "crowding", "type": "score", "question": "How crowded is this area?", "options": ["Empty", "Light", "Busy", "Packed"], "severity": null },
+            { "id": "tidy", "type": "score", "question": "How tidy is this area?", "options": ["Messy", "So-so", "Tidy", "Spotless"], "severity": null }
+          ]
+        },
+        "checkout": {
+          "label": "Checkout",
+          "questions": [
+            { "id": "queue", "type": "score", "question": "How long is the line?", "options": ["No line", "1-2", "3-5", "6+"], "severity": "medium" },
+            { "id": "unattended", "type": "noul", "question": "Is a checkout counter open with no staff member present?", "severity": "low" },
+            { "id": "spill", "type": "noul", "question": "Is there liquid, a puddle, or a wet patch on the floor?", "severity": "high" },
+            { "id": "trip", "type": "noul", "question": "Is there an object on the floor that someone could trip over?", "severity": "medium" },
+            { "id": "person_down", "type": "noul", "question": "Is a person lying or fallen on the floor?", "severity": "critical" },
+            { "id": "blocked", "type": "noul", "question": "Is the walkway or aisle blocked?", "severity": "medium" },
+            { "id": "crowding", "type": "score", "question": "How crowded is this area?", "options": ["Empty", "Light", "Busy", "Packed"], "severity": null },
+            { "id": "tidy", "type": "score", "question": "How tidy is this area?", "options": ["Messy", "So-so", "Tidy", "Spotless"], "severity": null }
+          ]
+        },
+        "stockroom": {
+          "label": "Stockroom",
+          "questions": [
+            { "id": "blocked_exit", "type": "noul", "question": "Is an exit, fire door, or emergency equipment blocked?", "severity": "critical" },
+            { "id": "unsafe_stack", "type": "noul", "question": "Are boxes or goods stacked in an unstable or unsafe way?", "severity": "high" },
+            { "id": "spill", "type": "noul", "question": "Is there liquid, a puddle, or a wet patch on the floor?", "severity": "high" },
+            { "id": "trip", "type": "noul", "question": "Is there an object on the floor that someone could trip over?", "severity": "medium" },
+            { "id": "person_down", "type": "noul", "question": "Is a person lying or fallen on the floor?", "severity": "critical" },
+            { "id": "broken", "type": "noul", "question": "Is there broken glass or a broken product visible?", "severity": "high" },
+            { "id": "tidy", "type": "score", "question": "How tidy is this area?", "options": ["Messy", "So-so", "Tidy", "Spotless"], "severity": null },
+            { "id": "crowding", "type": "score", "question": "How crowded is this area?", "options": ["Empty", "Light", "Busy", "Packed"], "severity": null }
+          ]
+        },
+        "entrance": {
+          "label": "Entrance",
+          "questions": [
+            { "id": "wet_entry", "type": "noul", "question": "Is the entrance floor wet or slippery-looking?", "severity": "high" },
+            { "id": "blocked", "type": "noul", "question": "Is the walkway or entrance blocked?", "severity": "medium" },
+            { "id": "trip", "type": "noul", "question": "Is there an object on the floor that someone could trip over?", "severity": "medium" },
+            { "id": "person_down", "type": "noul", "question": "Is a person lying or fallen on the floor?", "severity": "critical" },
+            { "id": "cart_clutter", "type": "noul", "question": "Are shopping carts left scattered or blocking the way?", "severity": "low" },
+            { "id": "crowding", "type": "score", "question": "How crowded is this area?", "options": ["Empty", "Light", "Busy", "Packed"], "severity": null },
+            { "id": "tidy", "type": "score", "question": "How tidy is this area?", "options": ["Messy", "So-so", "Tidy", "Spotless"], "severity": null },
+            { "id": "lighting", "type": "score", "question": "How well lit is the area?", "options": ["Dark", "Dim", "OK", "Bright"], "severity": null }
+          ]
+        }
+      }
+    },
+    "home": {
+      "id": "home",
+      "label": "Home",
+      "icon": "ti-home",
+      "blurb": "Trip, fall and fire risks",
+      "target_audience": "Families, carers of older adults",
+      "tier": 1,
+      "chips": ["general", "toddlers", "older_adults"],
+      "state_template": "Photo of a room in a private home, taken for a safety check. Area: {area}. Household focus: {focus}.",
+      "banners": {
+        "act": "Worth fixing",
+        "check": "Take a closer look",
+        "clear": "Looks safe"
+      },
+      "custom_placeholder": "Is the smoke alarm visible?",
+      "disclaimer": "Not a professional home inspection · Jev-Omni open model",
+      "areas": {
+        "living": {
+          "label": "Living Room / Bedroom",
+          "questions": [
+            { "id": "loose_rug", "type": "noul", "question": "Is there a loose rug or mat that could slip or cause a trip?", "severity": "medium", "focus_overrides": { "older_adults": "high" } },
+            { "id": "cord_walkway", "type": "noul", "question": "Is an electrical cord or cable running across a walkway?", "severity": "medium", "focus_overrides": { "toddlers": "high", "older_adults": "high" } },
+            { "id": "floor_clutter", "type": "noul", "question": "Are there objects on the floor in a walking path?", "severity": "low", "focus_overrides": { "toddlers": "medium", "older_adults": "high" } },
+            { "id": "fire_risk", "type": "noul", "question": "Is a heater, candle, or lamp close to fabric, paper, or curtains?", "severity": "high" },
+            { "id": "unstable_furniture", "type": "noul", "question": "Is there a tall piece of furniture or a TV that looks unsecured and could tip over?", "severity": "medium", "focus_overrides": { "toddlers": "critical" } },
+            { "id": "small_objects", "type": "noul", "question": "Are small objects that a toddler could swallow within reach on the floor or a low table?", "severity": "low", "focus_overrides": { "toddlers": "high" } },
+            { "id": "lighting", "type": "score", "question": "How well lit is this area?", "options": ["Dark", "Dim", "OK", "Bright"], "severity": null, "focus_overrides": { "older_adults": "medium" } },
+            { "id": "tidy", "type": "score", "question": "How tidy is this area?", "options": ["Messy", "So-so", "Tidy", "Spotless"], "severity": null }
+          ]
+        },
+        "stairs": {
+          "label": "Stairs & Hallways",
+          "questions": [
+            { "id": "handrail_missing", "type": "noul", "question": "Is there a staircase without a handrail?", "severity": "high" },
+            { "id": "stairs_clutter", "type": "noul", "question": "Are there objects left on the stairs?", "severity": "high" },
+            { "id": "stair_gate_missing", "type": "noul", "question": "Is the top or bottom of the stairs open with no safety gate?", "severity": null, "focus_overrides": { "toddlers": "critical" } },
+            { "id": "loose_rug", "type": "noul", "question": "Is there a loose rug or mat that could slip or cause a trip?", "severity": "medium", "focus_overrides": { "older_adults": "high" } },
+            { "id": "cord_walkway", "type": "noul", "question": "Is an electrical cord or cable running across a walkway?", "severity": "medium", "focus_overrides": { "toddlers": "high", "older_adults": "high" } },
+            { "id": "step_damage", "type": "noul", "question": "Does any step look broken, loose, or with a worn edge?", "severity": "medium" },
+            { "id": "lighting", "type": "score", "question": "How well lit is this area?", "options": ["Dark", "Dim", "OK", "Bright"], "severity": null }
+          ]
+        },
+        "bathroom": {
+          "label": "Bathroom",
+          "questions": [
+            { "id": "wet_floor", "type": "noul", "question": "Is there water on the floor?", "severity": "high" },
+            { "id": "no_grab_bar", "type": "noul", "question": "Is there no grab bar near the toilet or shower?", "severity": null, "focus_overrides": { "older_adults": "high" } },
+            { "id": "no_bath_mat", "type": "noul", "question": "Is there no non-slip mat in or next to the bath or shower?", "severity": "medium" },
+            { "id": "meds_reachable", "type": "noul", "question": "Are medicines or cleaning products within easy reach?", "severity": "low", "focus_overrides": { "toddlers": "critical" } },
+            { "id": "floor_clutter", "type": "noul", "question": "Are there objects on the floor in a walking path?", "severity": "low", "focus_overrides": { "older_adults": "high" } },
+            { "id": "lighting", "type": "score", "question": "How well lit is this area?", "options": ["Dark", "Dim", "OK", "Bright"], "severity": null },
+            { "id": "tidy", "type": "score", "question": "How tidy is this area?", "options": ["Messy", "So-so", "Tidy", "Spotless"], "severity": null }
+          ]
+        },
+        "outside": {
+          "label": "Entry & Outside",
+          "questions": [
+            { "id": "slippery_path", "type": "noul", "question": "Does the path or steps look wet, icy, or slippery?", "severity": "high" },
+            { "id": "path_blocked", "type": "noul", "question": "Is the path to the door blocked?", "severity": "medium" },
+            { "id": "handrail_missing", "type": "noul", "question": "Is there a staircase without a handrail?", "severity": "high" },
+            { "id": "step_damage", "type": "noul", "question": "Does any step look broken, loose, or with a worn edge?", "severity": "medium" },
+            { "id": "pool_unfenced", "type": "noul", "question": "Is there a pool or pond without a fence or cover?", "severity": "medium", "focus_overrides": { "toddlers": "critical" } },
+            { "id": "lighting", "type": "score", "question": "How well lit is this area?", "options": ["Dark", "Dim", "OK", "Bright"], "severity": null }
+          ]
+        }
+      }
+    },
+    "kitchen": {
+      "id": "kitchen",
+      "label": "Kitchen",
+      "icon": "ti-tools-kitchen-2",
+      "blurb": "Food safety and cleanliness",
+      "target_audience": "Restaurant and café staff",
+      "tier": 1,
+      "state_template": "Photo taken in a commercial kitchen for a food-safety check. Area: {area}. Time: {local_time}.",
+      "banners": {
+        "act": "Fix before service",
+        "check": "Double-check",
+        "clear": "Looks good"
+      },
+      "custom_placeholder": "Is the fridge door closed?",
+      "disclaimer": "Not a health inspection · temperatures need a thermometer",
+      "areas": {
+        "prep": {
+          "label": "Prep Line",
+          "questions": [
+            { "id": "raw_above_rte", "type": "noul", "question": "Is raw meat, poultry, or fish stored above or next to ready-to-eat food?", "severity": "critical" },
+            { "id": "uncovered", "type": "noul", "question": "Is prepared food left uncovered?", "severity": "high" },
+            { "id": "cross_board", "type": "noul", "question": "Is raw meat on the same cutting board or surface as vegetables or cooked food?", "severity": "critical" },
+            { "id": "no_sanitizer", "type": "noul", "question": "Is there no sanitizer bucket or spray visible at the station?", "severity": "medium" },
+            { "id": "floor_spill", "type": "noul", "question": "Is there a spill or food debris on the floor?", "severity": "high" },
+            { "id": "chem_near_food", "type": "noul", "question": "Are cleaning chemicals stored next to or above food?", "severity": "critical" },
+            { "id": "surface_clean", "type": "score", "question": "How clean are the work surfaces?", "options": ["Dirty", "So-so", "Clean", "Spotless"], "severity": null },
+            { "id": "clutter", "type": "score", "question": "How cluttered is the station?", "options": ["Clear", "Some", "Cluttered", "Chaotic"], "severity": null }
+          ]
+        },
+        "walkin": {
+          "label": "Walk-in Cooler / Fridge",
+          "questions": [
+            { "id": "raw_above_rte", "type": "noul", "question": "Is raw meat, poultry, or fish stored above or next to ready-to-eat food?", "severity": "critical" },
+            { "id": "food_on_floor", "type": "noul", "question": "Is food or a food container stored directly on the floor?", "severity": "high" },
+            { "id": "uncovered", "type": "noul", "question": "Is prepared food left uncovered?", "severity": "high" },
+            { "id": "overcrowded", "type": "noul", "question": "Are shelves so packed that air can't circulate?", "severity": "low" },
+            { "id": "ice_buildup", "type": "noul", "question": "Is there heavy ice build-up or a damaged door seal?", "severity": "medium" },
+            { "id": "unlabeled", "type": "noul", "question": "Are there food containers without a visible label?", "severity": "medium" },
+            { "id": "clutter", "type": "score", "question": "How cluttered is this area?", "options": ["Clear", "Some", "Cluttered", "Chaotic"], "severity": null }
+          ]
+        },
+        "dish": {
+          "label": "Dish Area",
+          "questions": [
+            { "id": "dish_pileup", "type": "noul", "question": "Are dirty dishes piled up beyond the sink or rack?", "severity": "low" },
+            { "id": "standing_water", "type": "noul", "question": "Is there standing water on the floor?", "severity": "high" },
+            { "id": "handsink_blocked", "type": "noul", "question": "Is a hand-washing sink blocked or being used for storage?", "severity": "high" },
+            { "id": "chem_near_food", "type": "noul", "question": "Are cleaning chemicals stored next to or above food?", "severity": "critical" },
+            { "id": "surface_clean", "type": "score", "question": "How clean are the surfaces?", "options": ["Dirty", "So-so", "Clean", "Spotless"], "severity": null }
+          ]
+        },
+        "dry": {
+          "label": "Dry Storage",
+          "questions": [
+            { "id": "open_bags", "type": "noul", "question": "Are bags or containers of dry food left open?", "severity": "medium" },
+            { "id": "food_on_floor", "type": "noul", "question": "Is food or a food container stored directly on the floor?", "severity": "high" },
+            { "id": "chem_near_food", "type": "noul", "question": "Are cleaning chemicals stored next to or above food?", "severity": "critical" },
+            { "id": "pest_signs", "type": "noul", "question": "Are there signs of pests, such as droppings, gnaw marks, or insects?", "severity": "critical" },
+            { "id": "clutter", "type": "score", "question": "How cluttered is this storage area?", "options": ["Clear", "Some", "Cluttered", "Chaotic"], "severity": null }
+          ]
+        }
+      }
+    },
+    "garden": {
+      "id": "garden",
+      "label": "Garden",
+      "icon": "ti-plant-2",
+      "blurb": "Plant health at a glance",
+      "target_audience": "Home gardeners",
+      "tier": 2,
+      "state_template": "Photo of a garden plant or bed, taken to check plant health. Area: {area}. Plant (if known): {plant}.",
+      "banners": {
+        "act": "Needs care",
+        "check": "Keep an eye on it",
+        "clear": "Looks healthy"
+      },
+      "custom_placeholder": "Are there flowers or fruit?",
+      "disclaimer": "General guidance, not a plant-disease diagnosis",
+      "areas": {
+        "leaf": {
+          "label": "Leaf Close-up",
+          "questions": [
+            { "id": "leaf_spots", "type": "noul", "question": "Are there brown, black, or yellow spots on the leaves?", "severity": "high" },
+            { "id": "yellowing", "type": "noul", "question": "Are leaves turning yellow?", "severity": "medium" },
+            { "id": "wilting", "type": "noul", "question": "Is the plant wilting or drooping?", "severity": "high" },
+            { "id": "pests", "type": "noul", "question": "Are insects or pests visible on the plant?", "severity": "high" },
+            { "id": "chewed", "type": "noul", "question": "Do leaves have holes or chewed edges?", "severity": "medium" },
+            { "id": "powdery", "type": "noul", "question": "Is there a white powdery coating on the leaves?", "severity": "high" },
+            { "id": "soil_moisture", "type": "score", "question": "How moist does the soil look?", "options": ["Very dry", "Dry", "Moist", "Waterlogged"], "severity": null },
+            { "id": "health", "type": "score", "question": "How healthy does the plant look overall?", "options": ["Dying", "Struggling", "OK", "Thriving"], "severity": null }
+          ]
+        },
+        "whole": {
+          "label": "Whole Plant",
+          "questions": [
+            { "id": "wilting", "type": "noul", "question": "Is the plant wilting or drooping?", "severity": "high" },
+            { "id": "yellowing", "type": "noul", "question": "Are leaves turning yellow?", "severity": "medium" },
+            { "id": "leggy", "type": "noul", "question": "Is the plant tall and thin with sparse leaves, as if it needs more light?", "severity": "low" },
+            { "id": "pests", "type": "noul", "question": "Are insects or pests visible on the plant?", "severity": "high" },
+            { "id": "health", "type": "score", "question": "How healthy does the plant look overall?", "options": ["Dying", "Struggling", "OK", "Thriving"], "severity": null },
+            { "id": "soil_moisture", "type": "score", "question": "How moist does the soil look?", "options": ["Very dry", "Dry", "Moist", "Waterlogged"], "severity": null }
+          ]
+        },
+        "bed": {
+          "label": "Bed / Lawn",
+          "questions": [
+            { "id": "weeds", "type": "noul", "question": "Are weeds growing among the plants?", "severity": "low" },
+            { "id": "bare_patches", "type": "noul", "question": "Are there bare or dead patches in the lawn or bed?", "severity": "medium" },
+            { "id": "standing_water", "type": "noul", "question": "Is there standing water in the bed?", "severity": "medium" },
+            { "id": "health", "type": "score", "question": "How healthy does the bed or lawn look overall?", "options": ["Dying", "Struggling", "OK", "Thriving"], "severity": null }
+          ]
+        },
+        "pot": {
+          "label": "Pot / Container",
+          "questions": [
+            { "id": "root_bound", "type": "noul", "question": "Are roots growing out of the bottom or top of the pot?", "severity": "medium" },
+            { "id": "no_drainage", "type": "noul", "question": "Does the pot appear to have no drainage, with water pooling?", "severity": "medium" },
+            { "id": "soil_moisture", "type": "score", "question": "How moist does the soil look?", "options": ["Very dry", "Dry", "Moist", "Waterlogged"], "severity": null },
+            { "id": "health", "type": "score", "question": "How healthy does the potted plant look?", "options": ["Dying", "Struggling", "OK", "Thriving"], "severity": null }
+          ]
+        }
+      }
+    },
+    "rental": {
+      "id": "rental",
+      "label": "Rental",
+      "icon": "ti-key",
+      "blurb": "Move-in and move-out condition",
+      "target_audience": "Tenants, hosts, landlords",
+      "tier": 2,
+      "chips": ["move_in", "move_out"],
+      "state_template": "Photo of a rental property taken for a {mode} condition report. Area: {area}.",
+      "banners": {
+        "act": "Record in report",
+        "check": "Retake closer",
+        "clear": "No issues found"
+      },
+      "custom_placeholder": "Are the blinds intact?",
+      "disclaimer": "Not a legal record on its own · keep your original photos",
+      "areas": {
+        "walls": {
+          "label": "Walls & Ceilings",
+          "questions": [
+            { "id": "scuffs", "type": "noul", "question": "Are there marks or scuffs on the walls?", "severity": "low" },
+            { "id": "holes", "type": "noul", "question": "Are there holes in the walls, such as from nails or screws?", "severity": "medium" },
+            { "id": "water_damage", "type": "noul", "question": "Is there water damage, staining, or mold on the wall or ceiling?", "severity": "high" },
+            { "id": "paint_damage", "type": "noul", "question": "Is the paint peeling, chipped, or patchy?", "severity": "low" }
+          ]
+        },
+        "floors": {
+          "label": "Floors & Carpet",
+          "questions": [
+            { "id": "floor_stain", "type": "noul", "question": "Are there stains on the carpet or floor?", "severity": "medium" },
+            { "id": "floor_damage", "type": "noul", "question": "Are there scratches, dents, or damaged sections in the floor?", "severity": "medium" },
+            { "id": "trash_left", "type": "noul", "question": "Is trash or debris left on the floor?", "severity": "low" },
+            { "id": "clean", "type": "score", "question": "How clean is the floor?", "options": ["Dirty", "So-so", "Clean", "Spotless"], "severity": null }
+          ]
+        },
+        "kitchen": {
+          "label": "Kitchen (Rental)",
+          "questions": [
+            { "id": "appliance_dirty", "type": "noul", "question": "Are appliances such as the stove or fridge visibly dirty?", "severity": "medium" },
+            { "id": "sink_dishes", "type": "noul", "question": "Are dishes left in the sink?", "severity": "low" },
+            { "id": "cabinet_damage", "type": "noul", "question": "Are cabinet doors or counters damaged?", "severity": "medium" },
+            { "id": "water_damage", "type": "noul", "question": "Is there water damage, staining, or mold on the wall or ceiling?", "severity": "high" },
+            { "id": "clean", "type": "score", "question": "How clean is the kitchen?", "options": ["Dirty", "So-so", "Clean", "Spotless"], "severity": null }
+          ]
+        },
+        "bathroom": {
+          "label": "Bathroom (Rental)",
+          "questions": [
+            { "id": "mold", "type": "noul", "question": "Is there mold or mildew in the shower, bath, or grout?", "severity": "high" },
+            { "id": "fixture_damage", "type": "noul", "question": "Is a sink, toilet, tap, or mirror cracked or broken?", "severity": "high" },
+            { "id": "clean", "type": "score", "question": "How clean is the bathroom?", "options": ["Dirty", "So-so", "Clean", "Spotless"], "severity": null },
+            { "id": "trash_left", "type": "noul", "question": "Is trash or debris left on the floor?", "severity": "low" }
+          ]
+        },
+        "room": {
+          "label": "Whole Room",
+          "questions": [
+            { "id": "items_left", "type": "noul", "question": "Are personal belongings or furniture left behind?", "severity": "medium" },
+            { "id": "trash_left", "type": "noul", "question": "Is trash or debris left on the floor?", "severity": "low" },
+            { "id": "window_damage", "type": "noul", "question": "Are windows, blinds, or curtains damaged?", "severity": "medium" },
+            { "id": "clean", "type": "score", "question": "How clean is the room?", "options": ["Dirty", "So-so", "Clean", "Spotless"], "severity": null },
+            { "id": "condition", "type": "score", "question": "What is the overall condition of the room?", "options": ["Poor", "Fair", "Good", "Excellent"], "severity": null }
+          ]
+        }
+      }
+    },
+    "vehicle": {
+      "id": "vehicle",
+      "label": "Vehicle",
+      "icon": "ti-car",
+      "blurb": "Quick walk-around check",
+      "target_audience": "Drivers, small fleets",
+      "tier": 2,
+      "state_template": "Photo of a car taken during a pre-drive walk-around check. Area: {area}.",
+      "banners": {
+        "act": "Check before driving",
+        "check": "Take a closer look",
+        "clear": "Looks OK"
+      },
+      "custom_placeholder": "Is the fuel cap closed?",
+      "disclaimer": "Not a mechanical inspection · plates and faces are blurred",
+      "areas": {
+        "tires": {
+          "label": "Tires",
+          "questions": [
+            { "id": "tire_low", "type": "noul", "question": "Does a tire look flat or low on air?", "severity": "critical" },
+            { "id": "tire_damage", "type": "noul", "question": "Is there a bulge, cut, or visible damage on the tire sidewall?", "severity": "critical" },
+            { "id": "tread_worn", "type": "score", "question": "How worn does the tread look?", "options": ["Like new", "Some wear", "Worn", "Bald"], "severity": "high" }
+          ]
+        },
+        "body": {
+          "label": "Body",
+          "questions": [
+            { "id": "dent_scratch", "type": "noul", "question": "Is there a dent or scratch on the body?", "severity": "low" },
+            { "id": "panel_loose", "type": "noul", "question": "Is a bumper, mirror, or panel loose or hanging?", "severity": "high" },
+            { "id": "dirty", "type": "score", "question": "How dirty is the car?", "options": ["Clean", "Dusty", "Dirty", "Very dirty"], "severity": null }
+          ]
+        },
+        "lights_glass": {
+          "label": "Lights & Glass",
+          "questions": [
+            { "id": "glass_crack", "type": "noul", "question": "Is the windshield or a window cracked or chipped?", "severity": "high" },
+            { "id": "light_broken", "type": "noul", "question": "Is a headlight, taillight, or indicator cracked or broken?", "severity": "high" },
+            { "id": "wipers_damaged", "type": "noul", "question": "Do the wiper blades look damaged or missing?", "severity": "medium" }
+          ]
+        },
+        "under": {
+          "label": "Under the Car",
+          "questions": [
+            { "id": "fluid_leak", "type": "noul", "question": "Is there a puddle or stain of fluid under the car?", "severity": "high" },
+            { "id": "hanging_parts", "type": "noul", "question": "Is anything hanging down under the car?", "severity": "high" }
+          ]
+        },
+        "dash": {
+          "label": "Dashboard",
+          "questions": [
+            { "id": "warning_light", "type": "noul", "question": "Is a warning light lit on the dashboard?", "severity": "high" },
+            { "id": "fuel_low", "type": "noul", "question": "Does the fuel gauge show nearly empty?", "severity": "low" },
+            { "id": "loose_cargo", "type": "noul", "question": "Are loose heavy objects in the cabin that could fly around when braking?", "severity": "medium" }
+          ]
+        }
+      }
+    }
+  }
+}

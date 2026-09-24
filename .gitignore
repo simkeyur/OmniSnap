@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+*.safetensors
+*.pt
+*.bin
+*.onnx
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Environment & Secrets
+.env
+*.key
+*.pem
+*.secret
+
+# Private eval / photo datasets
+eval/photos/private/
+eval/cache/
+
+# OS
+.DS_Store
+Thumbs.db

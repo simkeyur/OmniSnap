@@ -1,0 +1,12 @@
+{
+  "name": "omnisnap",
+  "version": "1.0.0",
+  "description": "Jev-based typed visual decision model for multi-domain safety and inspection checks",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/policy.test.js && node tests/validate-packs.js"
+  },
+  "keywords": ["jev", "jev-omni", "typed-decision", "safety", "inspection"],
+  "author": "simkeyur",
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snap Check mockup</title>
+<meta name="description" content="Clickable UI mockup of Snap Check (Store Sentinel v2): pick a domain, snap a photo, get calibrated checks, alerts only when it matters. Sample data only.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{
+  --surface-0:#f5f4ef;--surface-1:#efeee8;--surface-2:#ffffff;
+  --text-primary:#1f1e1c;--text-secondary:#5f5e5a;--text-muted:#888780;
+  --border:rgba(31,30,28,.12);--border-strong:rgba(31,30,28,.22);
+  --bg-accent:#e6f1fb;--text-accent:#185fa5;--border-accent:#85b7eb;
+  --bg-danger:#fcebeb;--text-danger:#a32d2d;--fill-danger:#e24b4a;--border-danger:#f09595;
+  --bg-warning:#faeeda;--text-warning:#854f0b;--fill-warning:#ef9f27;
+  --bg-success:#eaf3de;--text-success:#3b6d11;--fill-success:#639922;
+  --fill-primary:#1f1e1c;--on-primary:#ffffff;
+  --radius:8px;--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--font-voice:Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --surface-0:#1a1a19;--surface-1:#242422;--surface-2:#2c2c2a;
+    --text-primary:#f1efe8;--text-secondary:#b4b2a9;--text-muted:#888780;
+    --border:rgba(241,239,232,.12);--border-strong:rgba(241,239,232,.24);
+    --bg-accent:#0c447c;--text-accent:#b5d4f4;--border-accent:#378add;
+    --bg-danger:#501313;--text-danger:#f7c1c1;--fill-danger:#e24b4a;--border-danger:#a32d2d;
+    --bg-warning:#412402;--text-warning:#fac775;--fill-warning:#ef9f27;
+    --bg-success:#173404;--text-success:#c0dd97;--fill-success:#639922;
+    --fill-primary:#f1efe8;--on-primary:#1f1e1c;
+  }
+}
+:root[data-theme="dark"]{
+  --surface-0:#1a1a19;--surface-1:#242422;--surface-2:#2c2c2a;
+  --text-primary:#f1efe8;--text-secondary:#b4b2a9;--text-muted:#888780;
+  --border:rgba(241,239,232,.12);--border-strong:rgba(241,239,232,.24);
+  --bg-accent:#0c447c;--text-accent:#b5d4f4;--border-accent:#378add;
+  --bg-danger:#501313;--text-danger:#f7c1c1;--fill-danger:#e24b4a;--border-danger:#a32d2d;
+  --bg-warning:#412402;--text-warning:#fac775;--fill-warning:#ef9f27;
+  --bg-success:#173404;--text-success:#c0dd97;--fill-success:#639922;
+  --fill-primary:#f1efe8;--on-primary:#1f1e1c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);font-size:14px;line-height:1.5;padding:16px}
+button,input{font:inherit;color:inherit}
+button{background:transparent;border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:0 12px;height:36px;cursor:pointer}
+button:hover{background:var(--surface-1)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--border-accent);outline-offset:2px}
+input[type=text]{height:36px;border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:0 10px;background:var(--surface-2)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.top{max-width:720px;margin:0 auto 12px;text-align:center;padding:0 40px}
+.top h1{font-size:18px;font-weight:500;margin:0 0 4px}
+.top p{margin:0;color:var(--text-secondary);font-size:13px}
+.ss-nav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0 16px}
+.ss-nav button{font-size:12px;height:30px;padding:0 10px}
+.ss-nav button.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.ss-phone{width:360px;max-width:100%;margin:0 auto;border:0.5px solid var(--border-strong);border-radius:28px;padding:14px 12px;background:var(--surface-1)}
+.ss-scr{background:var(--surface-2);border-radius:18px;min-height:620px;padding:14px;font-size:13px;display:flex;flex-direction:column;gap:10px}
+.ss-btn{width:100%;height:44px;font-size:14px}
+.ss-pri{background:var(--fill-primary);color:var(--on-primary);border:none}
+.ss-pri:hover{background:var(--fill-primary);opacity:.9}
+.ss-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.ss-pill{font-size:11px;padding:2px 8px;border-radius:var(--radius);white-space:nowrap}
+.ss-bar{height:4px;background:var(--surface-1);border-radius:2px;overflow:hidden;margin-top:3px}
+.ss-muted{color:var(--text-secondary);font-size:12px}
+.ss-dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ss-dcard{height:auto;text-align:left;padding:12px;display:flex;flex-direction:column;gap:4px;border-radius:12px}
+.ss-dcard.on{border:1.5px solid var(--border-accent);background:var(--bg-accent)}
+.theme{position:absolute;top:12px;right:12px;height:30px;font-size:12px}
+@media (max-width:420px){body{padding:8px}.ss-phone{border:none;padding:0;background:transparent}.ss-scr{border-radius:12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<button class="theme" id="theme" aria-label="Toggle light or dark theme"><i class="ti ti-contrast" aria-hidden="true"></i></button>
+<div class="top">
+  <h1>Snap Check (Store Sentinel v2): UI mockup</h1>
+  <p>Clickable prototype with sample data only. No model is called. See <a href="../docs/06-ui-spec.md" style="color:var(--text-accent)">docs/06-ui-spec.md</a> and <a href="../docs/03-question-packs.md" style="color:var(--text-accent)">docs/03-question-packs.md</a>.</p>
+</div>
+<nav class="ss-nav" id="ss-nav" aria-label="Screens"></nav>
+<main class="ss-phone"><div class="ss-scr" id="ss-scr" aria-live="polite"></div></main>
+
+<script>
+/* Snap Check mockup: sample data only, no model calls. Domains/questions mirror docs/03-question-packs.md. */
+const $ = id => document.getElementById(id);
+
+const DOMAINS = {
+  store: {
+    label: "Store", icon: "ti-building-store", blurb: "Spills, trip hazards, blocked exits",
+    areas: ["Aisle", "Checkout", "Stockroom", "Entrance"], place: "Aisle 4", alt: "Checkout",
+    photo: "aisle", sample: "Juice spill in aisle 4", custom: "Is the freezer door left open?",
+    banners: { act: "Needs attention", check: "Take another look", clear: "All clear" },
+    finding: "likely spill", alertQ: "Spill",
+    rows: [["Spill or wet patch", .91], ["Trip hazard", .58], ["Empty shelf section", .22], ["Aisle blocked", .12], ["Broken glass or product", .06], ["Person on the floor", .03]],
+    scores: [["Crowding", "Light"], ["Tidiness", "So-so"]],
+    note: (z, t, p, c) => `${z}, ${t}: likely spill (${p}%), ${c}. Place a wet-floor sign and clean up.`,
+    disclaimer: "Demo only, not a safety system"
+  },
+  home: {
+    label: "Home", icon: "ti-home", blurb: "Trip, fall and fire risks",
+    areas: ["Living room", "Stairs and halls", "Bathroom", "Outside"], place: "Hallway", alt: "Bathroom",
+    photo: "icon", sample: "Loose rug and cable in the hallway", custom: "Is the smoke alarm visible?",
+    chips: ["General", "Toddlers", "Older adults"],
+    banners: { act: "Worth fixing", check: "Take a closer look", clear: "Looks safe" },
+    finding: "loose rug, trip risk", alertQ: "Trip risk",
+    rows: [["Loose rug or mat", .88], ["Cord across walkway", .71], ["Objects on the floor", .34], ["Furniture could tip over", .18], ["Heater or candle near fabric", .04], ["Small objects in reach", .09]],
+    scores: [["Lighting", "Dim"], ["Tidiness", "So-so"]],
+    note: (z, t, p, c) => `${z}, ${t}: loose rug and a cable across the walkway (${p}%), ${c}. Tape down or remove the rug and reroute the cable.`,
+    disclaimer: "Not a professional home inspection"
+  },
+  kitchen: {
+    label: "Kitchen", icon: "ti-tools-kitchen-2", blurb: "Food safety and cleanliness",
+    areas: ["Prep line", "Walk-in", "Dish area", "Dry storage"], place: "Walk-in", alt: "Prep line",
+    photo: "icon", sample: "Raw chicken above salad greens", custom: "Is the fridge door closed?",
+    banners: { act: "Fix before service", check: "Double-check", clear: "Looks good" },
+    finding: "raw food above ready-to-eat", alertQ: "Raw above ready-to-eat",
+    rows: [["Raw meat above ready-to-eat food", .86], ["Food left uncovered", .62], ["Shelves overcrowded", .41], ["Spill or debris on floor", .12], ["Food stored on the floor", .09], ["Chemicals near food", .05]],
+    scores: [["Surfaces", "Clean"], ["Clutter", "Some"]],
+    note: (z, t, p, c) => `${z}, ${t}: raw meat likely stored above ready-to-eat food (${p}%), ${c}. Move raw items to the bottom shelf.`,
+    disclaimer: "Not a health inspection · temperatures need a thermometer"
+  },
+  garden: {
+    label: "Garden", icon: "ti-plant-2", blurb: "Plant health at a glance",
+    areas: ["Leaf close-up", "Whole plant", "Bed or lawn", "Pot"], place: "Tomato bed", alt: "Herb pots",
+    photo: "icon", sample: "Tomato leaves with brown spots", custom: "Are there flowers or fruit?",
+    chips: ["Plant: tomato"],
+    banners: { act: "Needs care", check: "Keep an eye on it", clear: "Looks healthy" },
+    finding: "spots on leaves", alertQ: "Leaf spots",
+    rows: [["Spots on leaves", .83], ["Yellowing leaves", .57], ["Wilting", .22], ["Pests visible", .14], ["Chewed holes", .09], ["White powdery coating", .06]],
+    scores: [["Soil", "Dry"], ["Overall health", "Struggling"]],
+    note: (z, t, p, c) => `${z}, ${t}: spots on leaves (${p}%), ${c}. Remove affected leaves and water at the base, not the leaves.`,
+    disclaimer: "General guidance, not a plant-disease diagnosis"
+  },
+  rental: {
+    label: "Rental", icon: "ti-key", blurb: "Move-in and move-out condition",
+    areas: ["Walls", "Floors", "Kitchen", "Bathroom", "Whole room"], place: "Living room", alt: "Bathroom",
+    photo: "icon", sample: "Scuffed wall behind the sofa", custom: "Are the blinds intact?",
+    chips: ["Move-in", "Move-out"],
+    banners: { act: "Record in report", check: "Retake closer", clear: "No issues found" },
+    finding: "scuffs on the wall", alertQ: "Wall scuffs",
+    rows: [["Marks or scuffs on walls", .84], ["Stains on carpet or floor", .47], ["Holes in walls", .12], ["Items left behind", .09], ["Water damage or mold", .06], ["Trash left behind", .04]],
+    scores: [["Cleanliness", "Good"], ["Overall condition", "Fair"]],
+    note: (z, t, p, c) => `${z}, ${t}: scuff marks on the wall, likely (${p}%), ${c}. Add to the move-out condition report.`,
+    disclaimer: "Not a legal record on its own · keep your original photos"
+  },
+  vehicle: {
+    label: "Vehicle", icon: "ti-car", blurb: "Quick walk-around check",
+    areas: ["Tires", "Body", "Lights and glass", "Under the car", "Dashboard"], place: "Front left tire", alt: "Rear lights",
+    photo: "icon", sample: "Front left tire looking low", custom: "Is the fuel cap closed?",
+    banners: { act: "Check before driving", check: "Take a closer look", clear: "Looks OK" },
+    finding: "tire looks flat or low", alertQ: "Low tire",
+    rows: [["Tire looks flat or low", .89], ["Dent or scratch", .38], ["Fluid under the car", .11], ["Cracked glass", .07], ["Sidewall damage", .06], ["Broken light", .05]],
+    scores: [["Tread (visual)", "Some wear"], ["Dirt", "Dusty"]],
+    note: (z, t, p, c) => `${z}, ${t}: tire looks flat or low (${p}%), ${c}. Check the pressure before driving.`,
+    disclaimer: "Not a mechanical inspection · plates are blurred"
+  }
+};
+
+const S = { scr: "welcome", domain: "store", sens: 50, confirm: 2, area: 0, chip: 0 };
+const D = () => DOMAINS[S.domain];
+
+const pill = { act: ["Act", "--bg-danger", "--text-danger", "ti-alert-octagon"], check: ["Check", "--bg-warning", "--text-warning", "ti-eye"], clear: ["Clear", "--bg-success", "--text-success", "ti-circle-check"] };
+const P = b => `<span class="ss-pill" style="background:var(${pill[b][1]});color:var(${pill[b][2]})"><i class="ti ${pill[b][3]}" aria-hidden="true"></i> ${pill[b][0]}</span>`;
+const pct = p => Math.min(99, Math.max(1, Math.round(p * 100)));
+
+const aisle = (hazard = true, h = 150) => `<svg viewBox="0 0 300 ${h}" width="100%" style="border-radius:10px;display:block" role="img" aria-label="Illustration of a store aisle${hazard ? " with a puddle on the floor" : ""}"><rect width="300" height="${h}" fill="#D3D1C7"/><polygon points="0,0 110,40 110,${h - 50} 0,${h}" fill="#888780"/><polygon points="300,0 190,40 190,${h - 50} 300,${h}" fill="#888780"/>${[0, 1, 2, 3].map(i => `<line x1="0" y1="${20 + i * 32}" x2="110" y2="${50 + i * 18}" stroke="#5F5E5A" stroke-width="3"/><line x1="300" y1="${20 + i * 32}" x2="190" y2="${50 + i * 18}" stroke="#5F5E5A" stroke-width="3"/>`).join("")}<rect x="18" y="60" width="16" height="22" fill="#D85A30"/><rect x="40" y="66" width="14" height="18" fill="#378ADD"/><rect x="262" y="60" width="16" height="22" fill="#639922"/><polygon points="110,${h - 50} 190,${h - 50} 300,${h} 0,${h}" fill="#F1EFE8"/>${hazard ? `<ellipse cx="150" cy="${h - 22}" rx="48" ry="11" fill="#85B7EB" opacity=".85"/><ellipse cx="185" cy="${h - 14}" rx="18" ry="5" fill="#85B7EB" opacity=".85"/>` : ""}</svg>`;
+const iconPhoto = (hazard = true, h = 150) => {
+  const d = D();
+  return `<div role="img" aria-label="Sample photo: ${hazard ? d.sample : d.label + " area, no issues"}" style="height:${h}px;border-radius:10px;background:var(--surface-1);border:0.5px dashed var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--text-secondary);text-align:center;padding:8px">
+  <i class="ti ${d.icon}" aria-hidden="true" style="font-size:${Math.min(56, h / 3)}px;color:var(--text-accent)"></i>${h > 80 ? `<span style="font-size:12px">${hazard ? "Sample photo: " + d.sample : "No issues in this photo"}</span>` : ""}</div>`;
+};
+const photo = (hazard, h) => D().photo === "aisle" ? aisle(hazard, h) : iconPhoto(hazard, h);
+
+/* Sample shift per domain: probability of the domain's main alert question */
+const shift = () => { const d = D(); return [
+  { t: "14:02", z: d.place, sp: .04, hz: false },
+  { t: "14:09", z: d.place, sp: .91, hz: true },
+  { t: "14:15", z: d.place, sp: .86, hz: true },
+  { t: "14:21", z: d.alt, sp: .35, hz: false }]; };
+const tau = () => Math.round((0.75 - S.sens / 100 * 0.5) * 100) / 100;
+const band = p => p >= tau() + 0.1 ? "act" : p >= tau() - 0.1 ? "check" : "clear";
+function alerts() {
+  const out = [], byZ = {};
+  shift().forEach(s => {
+    (byZ[s.z] = byZ[s.z] || []).push(s);
+    const hits = byZ[s.z].slice(-3).filter(x => x.sp >= tau()).length;
+    if (!out.find(a => a.z === s.z) && hits >= S.confirm && band(s.sp) !== "clear") out.push({ z: s.z, t: s.t, p: s.sp });
+  });
+  return out;
+}
+
+const hdr = (title, back) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><div style="display:flex;align-items:center;gap:6px;min-width:0">${back ? `<button aria-label="Back" data-go="${back}" style="height:28px;padding:0 8px"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>` : '<i class="ti ti-shield-check" aria-hidden="true" style="font-size:18px;color:var(--text-accent)"></i>'}<span style="font-weight:500;font-size:14px">${title}</span></div><button data-go="domains" style="height:26px;font-size:11px;padding:0 8px;border-radius:var(--radius);background:var(--surface-1);color:var(--text-secondary);border:none" aria-label="Change domain, current ${D().label}"><i class="ti ${D().icon}" aria-hidden="true"></i> ${D().label} · ${D().place}</button></div>`;
+const foot = () => `<p class="ss-muted" style="margin-top:auto;font-size:11px;text-align:center">${D().disclaimer} · Jev-Omni (open model, not affiliated with TypeSafe AI)</p>`;
+const chipRow = (items, sel, key) => `<div style="display:flex;gap:6px;flex-wrap:wrap">${items.map((a, i) => `<button data-${key}="${i}" aria-pressed="${i === sel}" class="ss-pill" style="height:auto;padding:5px 10px;font-size:12px;${i === sel ? "background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)" : ""}">${a}</button>`).join("")}</div>`;
+
+const screens = {
+  welcome: () => `<div style="text-align:center;margin-top:30px"><div style="width:56px;height:56px;border-radius:50%;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:28px"><i class="ti ti-shield-check" aria-hidden="true"></i></div>
+<p style="font-size:20px;font-weight:500;margin:16px 0 6px">A second pair of eyes, wherever you are</p>
+<p class="ss-muted" style="font-size:13px">Snap a photo. An open AI model runs a quick checklist on it in a few seconds and tells you how sure it is about each answer.</p></div>
+<div style="display:flex;flex-direction:column;gap:10px;margin:10px 0">${[["ti-lock", "Your photos aren't stored"], ["ti-gauge", "Answers come with a confidence"], ["ti-bell", "Alerts only when it matters"]].map(([i, t]) => `<div style="display:flex;gap:10px;align-items:center"><i class="ti ${i}" aria-hidden="true" style="font-size:18px;color:var(--text-accent)"></i><span>${t}</span></div>`).join("")}</div>
+<button class="ss-btn ss-pri" data-go="domains">Get started</button><button class="ss-btn" data-go="shift">Try sample photos</button>${foot()}`,
+
+  domains: () => `${hdr("What are you checking?", "welcome")}
+<p class="ss-muted" style="margin:0">Pick one. You can switch any time from the top bar.</p>
+<div class="ss-dgrid">${Object.entries(DOMAINS).map(([k, d]) => `<button class="ss-dcard${k === S.domain ? " on" : ""}" data-domain="${k}" aria-pressed="${k === S.domain}"><i class="ti ${d.icon}" aria-hidden="true" style="font-size:22px;color:var(--text-accent)"></i><span style="font-weight:500">${d.label}</span><span class="ss-muted" style="font-size:11px;line-height:1.35">${d.blurb}</span></button>`).join("")}</div>
+<button class="ss-btn ss-pri" data-go="camera">Continue with ${D().label}</button>${foot()}`,
+
+  camera: () => { const d = D(); return `${hdr("New check", "domains")}
+${chipRow(d.areas, S.area, "area")}
+${d.chips ? `<div style="display:flex;align-items:center;gap:6px"><span class="ss-muted">${S.domain === "home" ? "Focus" : S.domain === "rental" ? "Mode" : "Details"}</span>${chipRow(d.chips, S.chip, "chip")}</div>` : ""}
+${photo(true, 210)}
+<div style="display:flex;align-items:center;justify-content:space-between"><label class="ss-muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" checked> Blur ${S.domain === "vehicle" ? "faces and plates" : "faces"} before sending</label><button aria-label="Switch camera" style="height:32px"><i class="ti ti-camera-rotate" aria-hidden="true"></i></button></div>
+<details class="ss-muted"><summary>Ask my own question</summary><input type="text" placeholder="${d.custom}" style="width:100%;margin-top:6px"></details>
+<button class="ss-btn ss-pri" data-go="checking"><i class="ti ti-camera" aria-hidden="true"></i> Take photo and check</button>
+<p class="ss-muted" style="text-align:center;margin:0">Uses about 2 s of your free daily GPU time</p>${foot()}`; },
+
+  checking: () => `${hdr("Checking", "camera")}<div style="opacity:.55">${photo(true, 190)}</div>
+<div style="text-align:center;margin-top:10px"><i class="ti ti-loader-2" aria-hidden="true" style="font-size:28px;color:var(--text-accent)"></i>
+<p style="font-weight:500;margin:6px 0 2px" id="ss-step">Sending photo…</p><p class="ss-muted">8 checks · ${S.domain === "vehicle" ? "faces and plates" : "faces"} blurred · photo not stored</p></div>
+<div style="display:flex;flex-direction:column;gap:4px;font-size:12px">${["Sending photo", "Waiting in line (2 ahead)", "Running the " + D().label.toLowerCase() + " checklist"].map((t, i) => `<div class="ss-muted" id="ss-st${i}"><i class="ti ti-circle" aria-hidden="true"></i> ${t}</div>`).join("")}</div>
+<button class="ss-btn" data-go="camera">Cancel</button>${foot()}`,
+
+  results: () => { const d = D(); const top = d.rows[0][1]; return `${hdr("Results", "camera")}${photo(true, 110)}
+<div style="background:var(--bg-danger);color:var(--text-danger);border-radius:var(--radius);padding:10px 12px;display:flex;gap:8px;align-items:center"><i class="ti ti-alert-octagon" aria-hidden="true" style="font-size:20px"></i><div><div style="font-weight:500">${d.banners.act}: ${d.finding}</div><div style="font-size:12px">${pct(top)}% sure · 1 more photo confirms it</div></div></div>
+<div>${d.rows.map(([l, p]) => { const b = band(p); return `<div class="ss-row"><div style="flex:1;min-width:0"><div>${l}</div><div class="ss-bar"><div style="height:100%;width:${pct(p)}%;background:var(${b === "act" ? "--fill-danger" : b === "check" ? "--fill-warning" : "--fill-success"})"></div></div></div><span class="ss-muted" style="width:32px;text-align:right">${pct(p)}%</span>${P(b)}</div>`; }).join("")}
+${d.scores.map(([l, v], i) => `<div class="ss-row"${i === d.scores.length - 1 ? ' style="border:none"' : ""}><div style="flex:1">${l}</div><span class="ss-muted">${v}</span></div>`).join("")}</div>
+<p class="ss-muted" style="margin:0">8 checks · 1.8 s · Jev-Omni · <u>Why these numbers?</u></p>
+<button class="ss-btn ss-pri" data-go="camera">Check another photo</button><button class="ss-btn" data-go="shift">View session</button>`; },
+
+  shift: () => { const d = D(); const al = alerts(); return `${hdr("Your session", "welcome")}
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">${[["Photos", 4], ["Checks", 32], ["Alerts", al.length]].map(([l, v]) => `<div style="background:var(--surface-1);border-radius:var(--radius);padding:8px"><div class="ss-muted" style="font-size:11px">${l}</div><div style="font-size:18px;font-weight:500">${v}</div></div>`).join("")}</div>
+<p class="ss-muted" style="margin:0"><i class="ti ti-sparkles" aria-hidden="true"></i> Language model used for ${al.length} of 32 decisions</p>
+${al.length ? al.map(a => `<div style="border:0.5px solid var(--border-danger);border-radius:var(--radius);padding:10px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:500;color:var(--text-danger)"><i class="ti ti-bell" aria-hidden="true"></i> ${d.alertQ} · ${a.z}</span><span class="ss-muted">${a.t}</span></div><p style="margin:6px 0;font-size:12px;font-family:var(--font-voice)">${d.note(a.z, a.t, pct(a.p), S.confirm > 1 ? "confirmed by 2 photos" : "from 1 photo")}</p><div style="display:flex;gap:6px"><button style="height:30px;font-size:12px"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button><button style="height:30px;font-size:12px"><i class="ti ti-check" aria-hidden="true"></i> Resolved</button></div></div>`).join("") : `<div style="background:var(--bg-success);color:var(--text-success);border-radius:var(--radius);padding:10px"><i class="ti ti-circle-check" aria-hidden="true"></i> ${d.banners.clear}: no open alerts</div>`}
+<div>${shift().slice().reverse().map(s => `<div class="ss-row"><div style="width:44px;flex-shrink:0">${photo(s.hz, 40)}</div><div style="flex:1"><div>${s.z}</div><div class="ss-muted">${s.t} · ${d.alertQ.toLowerCase()} ${pct(s.sp)}%</div></div>${P(band(s.sp))}</div>`).join("")}</div>
+<button class="ss-btn" data-go="rules"><i class="ti ti-adjustments" aria-hidden="true"></i> Alert rules</button><button class="ss-btn ss-pri" data-go="camera">Check another photo</button>`; },
+
+  rules: () => `${hdr("Alert rules", "shift")}<p style="font-weight:500;margin:0">How cautious should alerts be?</p>
+<div id="ss-banner" style="background:var(--bg-accent);color:var(--text-accent);border-radius:var(--radius);padding:8px 10px;font-size:12px;transition:opacity .12s"><i class="ti ti-bolt" aria-hidden="true"></i> Re-checked 4 photos instantly: 0 new AI calls</div>
+<div><div style="display:flex;justify-content:space-between"><label for="ss-sens">High severity: sensitivity</label><span class="ss-muted" id="ss-sv">${S.sens}</span></div>
+<input type="range" min="0" max="100" step="5" value="${S.sens}" id="ss-sens" style="width:100%"><div class="ss-muted" style="display:flex;justify-content:space-between;font-size:11px"><span>Fewer alerts</span><span>Catch everything</span></div></div>
+<div><div style="margin-bottom:6px">Confirm with</div><div style="display:flex;gap:6px">${[[1, "1 photo"], [2, "2 of last 3"]].map(([v, l]) => `<button style="flex:1;height:36px;font-size:12px;${S.confirm === v ? "background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)" : ""}" data-confirm="${v}" aria-pressed="${S.confirm === v}">${l}</button>`).join("")}</div></div>
+<div id="ss-live" style="border-top:0.5px solid var(--border);padding-top:8px"></div>
+<button class="ss-btn" data-reset="1">Reset to defaults</button><button class="ss-btn ss-pri" data-go="shift">Done</button>`
+};
+
+function live() {
+  const al = alerts();
+  $("ss-live").innerHTML = `<div class="ss-muted" style="margin-bottom:4px">Threshold τ = ${tau().toFixed(2)} · ${al.length} open alert${al.length === 1 ? "" : "s"}</div>` +
+    shift().map(s => `<div class="ss-row" style="padding:4px 0"><span style="flex:1">${s.t} · ${s.z}</span><span class="ss-muted">${pct(s.sp)}%</span>${P(band(s.sp))}</div>`).join("");
+}
+
+const names = { welcome: "Welcome", domains: "Domains", camera: "Camera", checking: "Checking", results: "Results", shift: "Session", rules: "Alert rules" };
+let timers = [];
+function go(s) {
+  S.scr = s; timers.forEach(clearTimeout); timers = [];
+  $("ss-scr").innerHTML = screens[s]();
+  $("ss-nav").innerHTML = Object.keys(names).map(k => `<button class="${k === s ? "on" : ""}" data-go="${k}" aria-current="${k === s ? "page" : "false"}">${names[k]}</button>`).join("") +
+    `<select id="ss-dsel" aria-label="Domain" style="height:30px;font-size:12px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-2);color:var(--text-primary)">${Object.entries(DOMAINS).map(([k, d]) => `<option value="${k}"${k === S.domain ? " selected" : ""}>${d.label}</option>`).join("")}</select>`;
+  $("ss-dsel").onchange = e => { S.domain = e.target.value; S.area = 0; S.chip = 0; go(S.scr); };
+  if (s === "rules") {
+    live();
+    $("ss-sens").oninput = e => { S.sens = +e.target.value; $("ss-sv").textContent = S.sens; live(); const b = $("ss-banner"); b.style.opacity = .6; setTimeout(() => b.style.opacity = 1, 120); };
+  }
+  if (s === "checking") {
+    ["Sending photo…", "Waiting in line (2 ahead)…", "Running the " + D().label.toLowerCase() + " checklist…"].forEach((t, i) => timers.push(setTimeout(() => {
+      const st = $("ss-step"); if (st) st.textContent = t;
+      const el = $("ss-st" + i); if (el) { el.style.color = "var(--text-primary)"; el.querySelector("i").className = "ti ti-circle-check"; }
+    }, i * 700)));
+    timers.push(setTimeout(() => go("results"), 2300));
+  }
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-go],[data-confirm],[data-reset],[data-domain],[data-area],[data-chip]");
+  if (!t) return;
+  if (t.dataset.go) go(t.dataset.go);
+  else if (t.dataset.domain) { S.domain = t.dataset.domain; S.area = 0; S.chip = 0; go("domains"); }
+  else if (t.dataset.area !== undefined) { S.area = +t.dataset.area; go("camera"); }
+  else if (t.dataset.chip !== undefined) { S.chip = +t.dataset.chip; go("camera"); }
+  else if (t.dataset.confirm) { S.confirm = +t.dataset.confirm; go("rules"); }
+  else if (t.dataset.reset) { S.sens = 50; S.confirm = 2; go("rules"); }
+});
+$("theme").onclick = () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+};
+go("welcome");
+</script>
+</body>
+</html>
