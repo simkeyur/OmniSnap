@@ -1,6 +1,6 @@
 try:
     import spaces
-    gpu_decorator = spaces.GPU(duration=30)
+    gpu_decorator = spaces.GPU(duration=50)
     note_decorator = spaces.GPU(duration=15)
 except (ImportError, AttributeError):
     def gpu_decorator(fn):

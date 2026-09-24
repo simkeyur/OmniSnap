@@ -3,8 +3,20 @@ from pathlib import Path
 from PIL import Image
 
 MODEL_ID = "akhilaaa3/Jev-Omni"
+BASE_ID = "google/gemma-4-12B-it"
 
 _classifier = None
+
+# Pre-cache weights on disk at container launch (outside @spaces.GPU)
+try:
+    from huggingface_hub import snapshot_download
+    print(f"[Engine] Pre-caching model weights to local disk: {MODEL_ID}...")
+    snapshot_download(MODEL_ID)
+    print(f"[Engine] Pre-caching base weights: {BASE_ID}...")
+    snapshot_download(BASE_ID)
+    print("[Engine] Model weights successfully cached to disk.")
+except Exception as e:
+    print(f"[Engine] Disk pre-caching notice: {e}")
 
 def get_classifier():
     global _classifier
@@ -13,7 +25,7 @@ def get_classifier():
 
     import torch
     if torch.cuda.is_available():
-        print(f"[Engine] CUDA detected (device_count={torch.cuda.device_count()}). Loading {MODEL_ID}...")
+        print(f"[Engine] CUDA detected. Assembling {MODEL_ID} into GPU memory...")
         from huggingface_hub import snapshot_download
         import importlib.util
 
@@ -22,7 +34,7 @@ def get_classifier():
         loader_mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(loader_mod)
         _classifier = loader_mod.load_jev_omni(device="cuda")
-        print("[Engine] Jev-Omni loaded successfully onto CUDA.")
+        print("[Engine] Jev-Omni loaded successfully into CUDA memory.")
     else:
         print("[Engine] Running without CUDA. Using MockJevOmni.")
         class MockJevOmni:
